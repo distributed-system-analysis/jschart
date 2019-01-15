@@ -1,6 +1,6 @@
 const d3 = require('d3');
 const d3_queue = require('d3-queue');
-const saveSvgAsPng = require('save-svg-as-png');
+const {saveSvgAsPng} = require('save-svg-as-png');
 
 function load_jschart_override_options() {
     var imported_options = {};
@@ -2192,13 +2192,13 @@ function build_chart(chart) {
 	.text("Help");
 
     // make sure that the library was properly loaded prior to adding the "Save as PNG" link
-    if (typeof saveSvgAsPng.saveSvgAsPng == 'function') {
+    if (typeof saveSvgAsPng == 'function') {
 	chart.chart.container.append("text")
 	    .classed("actionlabel middletext", true)
 	    .attr("x", (chart.dimensions.viewport_width / 4) * 2)
 	    .attr("y", -chart.dimensions.margin.top + 29)
 	    .on("click", function() {
-		saveSvgAsPng.saveSvgAsPng(this.ownerSVGElement, chart.chart_title + ".png", {
+		saveSvgAsPng(this.ownerSVGElement, chart.chart_title + ".png", {
 		    backgroundColor: "#FFFFFF"
 		});
 	    })
