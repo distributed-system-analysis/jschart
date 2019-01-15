@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/jschart/node_modules
 
 # testing
 /coverage
