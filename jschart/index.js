@@ -1,6 +1,7 @@
 const d3 = require('d3');
 const d3_queue = require('d3-queue');
 const {saveSvgAsPng} = require('save-svg-as-png');
+require('./index.css');
 
 function load_jschart_override_options() {
     var imported_options = {};
