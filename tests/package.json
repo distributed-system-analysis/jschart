@@ -5,7 +5,7 @@
   "license": "EPL-1.0",
   "dependencies": {
     "axios": "^0.18.0",
-    "jschart": "file:jschart",
+    "jschart": "file:../jschart",
     "react": "^16.5.1",
     "react-dom": "^16.5.1",
     "react-scripts": "1.1.5"
