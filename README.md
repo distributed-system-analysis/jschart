@@ -31,18 +31,22 @@ changes to the jschart node module and ensure native functionality with React.
 ```bash
 ├── jschart                  # local node module
 │   ├── index.js             # library entry point
-│   ├── package.json
-├── public
-├── src
-│   ├── App.css              # test app styling
-│   ├── App.js               # App component definition
-│   ├── App.test.js          # App component test definition
-│   ├── index.js             # entry point
+│   ├── index.css            # library styling
+│   └── package.json         # library config
+├── tests                    # testing environment
+│   ├── public                
+│   ├── src
+│   │   ├── App.js           # App component definition
+│   │   ├── App.test.js      # App component test definition
+│   │   └── index.js         # testing environment entry point
+│   └── package.json         # testing environment config
 ├── README.md
-└── package.json
+└── LICENSE
 ```
 
 ## Installation
+
+The `tests` directory represents the testing environment for ensuring native functionality with React. Run the following commands from the root of this directory to prepare the environment for local development: 
 
 Install Testing Environment Dependencies
 
@@ -53,7 +57,7 @@ $ npm install
 Install Local jschart Node Module
 
 ```bash
-$ npm install --save jschart/
+$ npm install --save ../jschart/
 ```
 
 This will create a reference to the `jschart/` directory under dependencies in `package.json`:
