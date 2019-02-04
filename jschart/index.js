@@ -2049,7 +2049,8 @@ function build_chart(chart) {
 
     var table = chart.dom.div.append("table");
 
-    var row = table.append("tr")
+	var row = table.append("tr")
+	.classed("wrapper", true)
 	.attr("vAlign", "top");
 
     var chart_cell = row.append("td");
