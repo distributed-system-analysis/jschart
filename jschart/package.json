@@ -1,6 +1,6 @@
 {
   "name": "jschart",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "This is a Javascript library that renders SVG charts.",
   "scripts": {
     "build": "webpack"
