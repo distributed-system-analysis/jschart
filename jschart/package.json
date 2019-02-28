@@ -1,7 +1,13 @@
 {
   "name": "jschart",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "This is a Javascript library that renders SVG charts.",
+  "keywords": [
+    "chart", 
+    "time series",
+    "canvas"
+  ],
+  "homepage": "https://github.com/distributed-system-analysis/jschart",
   "scripts": {
     "build": "webpack"
   },
