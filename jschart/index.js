@@ -3564,7 +3564,7 @@ exports.create_jschart = function(
   );
 };
 
-function finish_page() {
+exports.finish_page = function () {
   // wait for chart generation to complete before logging that it is done and changing the page background
   charts_queue.await(function(error, results) {
     d3.select("body").classed("completedpage", true);
