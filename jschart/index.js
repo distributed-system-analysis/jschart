@@ -3247,7 +3247,7 @@ function build_chart(chart) {
     for (var i = 0; i < chart.options.csvfiles.length; i++) {
       // add a dataset load to the queue
       chart.datasets_queue.defer(
-        load_csv_text,
+        load_csv_files,
         chart.options.csvfiles[i],
         chart
       );
