@@ -1548,7 +1548,7 @@ function navigate_to_chart(target) {
   }
 }
 
-function complete_chart(chart) {
+function create_chart_dataset_objects(chart) {
   update_domains(chart);
 
   if (chart.datasets.all.length < chart.dimensions.legend_properties.columns) {
@@ -2239,7 +2239,9 @@ function create_table(chart) {
     .append("th")
     .attr("align", "right")
     .text("Samples");
+}
 
+function table_add_datasets(chart) {
   for (var i = 0; i < chart.datasets.all.length; i++) {
     chart.datasets.all[i].dom.table.row = chart.dom.table.table
       .selectAll(".tablerow")
@@ -2626,6 +2628,7 @@ function generate_chart(
   charts[charts_index].charts_index = charts_index;
 
   build_chart(charts[charts_index]);
+  load_datasets(charts[charts_index]);
 
   callback();
 }
@@ -3224,237 +3227,101 @@ function build_chart(chart) {
       return false;
     });
 
-  chart.chart.loading = chart.chart.container
+  chart.chart.zoomout = chart.chart.container
+    .append("g")
+    .classed("chartbutton", true)
+    .classed("hidden", true)
+    .on("click", function() {
+      zoom_it(chart, 1);
+      chart.state.user_x_zoomed = true;
+      chart.state.user_y_zoomed = true;
+    })
+    .on("mouseout", function() {
+      chart.chart.viewport_controls.classed("hidden", true);
+    })
+    .on("mouseover", function() {
+      chart.chart.viewport_controls.classed("hidden", false);
+    });
+
+  chart.chart.zoomout
+    .append("circle")
+    .attr("cx", 20)
+    .attr("cy", 20)
+    .attr("r", 11);
+
+  chart.chart.zoomout
     .append("text")
-    .classed("loadinglabel middletext", true)
-    .attr(
-      "x",
-      (chart.x.scale.chart(x_domain[1]) - chart.x.scale.chart(x_domain[0])) / 2
-    )
-    .attr(
-      "y",
-      (chart.y.scale.chart(y_domain[0]) - chart.y.scale.chart(y_domain[1])) /
-        2 +
-        35
-    )
-    .text("Loading");
+    .classed("middletext", true)
+    .attr("x", 20)
+    .attr("y", 24)
+    .text("-");
 
-  if (chart.options.csvfiles) {
-    // this path can have no parallelism since it is unknown how
-    // many datasets each CSV file might contain
-    chart.datasets_queue = d3_queue.queue(1);
+  chart.chart.zoomin = chart.chart.container
+    .append("g")
+    .classed("chartbutton", true)
+    .classed("hidden", true)
+    .on("click", function() {
+      zoom_it(chart, -1);
+      chart.state.user_x_zoomed = true;
+      chart.state.user_y_zoomed = true;
+    })
+    .on("mouseout", function() {
+      chart.chart.viewport_controls.classed("hidden", true);
+    })
+    .on("mouseover", function() {
+      chart.chart.viewport_controls.classed("hidden", false);
+    });
 
-    for (var i = 0; i < chart.options.csvfiles.length; i++) {
-      // add a dataset load to the queue
-      chart.datasets_queue.defer(
-        load_csv_files,
-        chart.options.csvfiles[i],
-        chart
-      );
-    }
-  } else {
-    // this path can have some parallelism, but place a limit on
-    // it to keep things under control
-    chart.datasets_queue = d3_queue.queue(512);
+  chart.chart.viewport_controls = d3.selectAll([
+    chart.chart.zoomout.node(),
+    chart.chart.zoomin.node()
+  ]);
 
-    if (chart.options.packed && chart.options.plotfile) {
-      // add a packed dataset load to the queue
-      chart.datasets_queue.defer(load_plot_file, chart.options.plotfile, chart);
-    } else {
-      if (chart.options.plotfiles) {
-        for (var i = 0; i < chart.options.plotfiles.length; i++) {
-          // add a dataset load to the queue
-          chart.datasets_queue.defer(
-            load_plot_files,
-            chart.options.plotfiles[i],
-            chart,
-            i
-          );
-        }
-      } else {
-        if (chart.options.json_plotfile || chart.options.json_object) {
-          chart.datasets_queue.defer(load_json, chart);
-        }
-      }
-    }
-  }
+  chart.chart.zoomin
+    .append("circle")
+    .attr("cx", 50)
+    .attr("cy", 20)
+    .attr("r", 11);
 
-  // block waiting for the queue processing to complete before completing the chart
-  chart.datasets_queue.await(function(error, results) {
-    chart.chart.loading.remove();
-    chart.chart.loading = null;
+  chart.chart.zoomin
+    .append("text")
+    .classed("middletext", true)
+    .attr("x", 50)
+    .attr("y", 24)
+    .text("+");
 
-    console.log('Content load complete for chart "' + chart.chart_title + '".');
+  chart.chart.xcursorline = chart.chart.container
+    .append("line")
+    .classed("cursorline hidden", true)
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", 1)
+    .attr("y2", 1);
 
-    if (chart.options.sort_datasets) {
-      if (chart.data_model == "histogram") {
-        console.log(
-          'Sorting datasets descending by histogram mean for chart "' +
-            chart.chart_title +
-            '"...'
-        );
-        chart.datasets.all.sort(dataset_histogram_sort);
-      } else {
-        console.log(
-          'Sorting datasets descending by mean for chart "' +
-            chart.chart_title +
-            '"...'
-        );
-        chart.datasets.all.sort(dataset_sort);
-      }
-      console.log(
-        '...finished sorting datasets for chart "' + chart.chart_title + '"...'
-      );
+  chart.chart.ycursorline = chart.chart.container
+    .append("line")
+    .classed("cursorline hidden", true)
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", 1)
+    .attr("y2", 1);
 
-      // the dataset indexes need to be updated after sorting
-      for (var i = 0; i < chart.datasets.all.length; i++) {
-        chart.datasets.all[i].index = i;
-      }
-    }
+  chart.chart.coordinates = chart.chart.container
+    .append("text")
+    .classed("coordinates endtext hidden", true)
+    .attr("x", chart.dimensions.viewport_width - 5)
+    .attr("y", 15)
+    .text("coordinates");
 
-    for (var i = 0; i < chart.datasets.all.length; i++) {
-      if (!chart.datasets.all[i].invalid) {
-        chart.datasets.valid.push(chart.datasets.all[i]);
-      } else {
-        console.log(
-          'ERROR: Dataset "' +
-            chart.datasets.all[i].name +
-            '" for chart "' +
-            chart.chart_title +
-            '" is empty.  It has been flagged as invalid and many user actions will be ignored for this dataset.'
-        );
-      }
-    }
+  chart.chart.viewport_elements = d3.selectAll([
+    chart.chart.xcursorline.node(),
+    chart.chart.ycursorline.node(),
+    chart.chart.coordinates.node()
+  ]);
 
-    if (chart.datasets.all.length > chart.dataset_count) {
-      console.log('Resizing SVG for chart "' + chart.chart_title + '".');
-      chart.chart.svg.attr(
-        "height",
-        chart.dimensions.viewport_height +
-          chart.dimensions.margin.top +
-          chart.dimensions.margin.bottom +
-          (Math.ceil(
-            chart.datasets.all.length /
-              chart.dimensions.legend_properties.columns
-          ) -
-            1 +
-            chart.options.legend_entries.length) *
-            chart.dimensions.legend_properties.row_height
-      );
-    }
-
-    console.log('Creating table for chart "' + chart.chart_title + '"...');
-    create_table(chart);
-    console.log(
-      '...finished adding table for chart "' + chart.chart_title + '"'
-    );
-
-    console.log('Processing datasets for chart "' + chart.chart_title + '"...');
-    complete_chart(chart);
-    console.log(
-      '...finished processing datasets for chart "' + chart.chart_title + '"'
-    );
-
-    chart.x.slider.call(chart.x.brush.event);
-    chart.y.slider.call(chart.y.brush.event);
-
-    chart.chart.zoomout = chart.chart.container
-      .append("g")
-      .classed("chartbutton", true)
-      .classed("hidden", true)
-      .on("click", function() {
-        zoom_it(chart, 1);
-        chart.state.user_x_zoomed = true;
-        chart.state.user_y_zoomed = true;
-      })
-      .on("mouseout", function() {
-        chart.chart.viewport_controls.classed("hidden", true);
-      })
-      .on("mouseover", function() {
-        chart.chart.viewport_controls.classed("hidden", false);
-      });
-
-    chart.chart.zoomout
-      .append("circle")
-      .attr("cx", 20)
-      .attr("cy", 20)
-      .attr("r", 11);
-
-    chart.chart.zoomout
-      .append("text")
-      .classed("middletext", true)
-      .attr("x", 20)
-      .attr("y", 24)
-      .text("-");
-
-    chart.chart.zoomin = chart.chart.container
-      .append("g")
-      .classed("chartbutton", true)
-      .classed("hidden", true)
-      .on("click", function() {
-        zoom_it(chart, -1);
-        chart.state.user_x_zoomed = true;
-        chart.state.user_y_zoomed = true;
-      })
-      .on("mouseout", function() {
-        chart.chart.viewport_controls.classed("hidden", true);
-      })
-      .on("mouseover", function() {
-        chart.chart.viewport_controls.classed("hidden", false);
-      });
-
-    chart.chart.viewport_controls = d3.selectAll([
-      chart.chart.zoomout.node(),
-      chart.chart.zoomin.node()
-    ]);
-
-    chart.chart.zoomin
-      .append("circle")
-      .attr("cx", 50)
-      .attr("cy", 20)
-      .attr("r", 11);
-
-    chart.chart.zoomin
-      .append("text")
-      .classed("middletext", true)
-      .attr("x", 50)
-      .attr("y", 24)
-      .text("+");
-
-    chart.chart.xcursorline = chart.chart.container
-      .append("line")
-      .classed("cursorline hidden", true)
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr("x2", 1)
-      .attr("y2", 1);
-
-    chart.chart.ycursorline = chart.chart.container
-      .append("line")
-      .classed("cursorline hidden", true)
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr("x2", 1)
-      .attr("y2", 1);
-
-    chart.chart.coordinates = chart.chart.container
-      .append("text")
-      .classed("coordinates endtext hidden", true)
-      .attr("x", chart.dimensions.viewport_width - 5)
-      .attr("y", 15)
-      .text("coordinates");
-
-    chart.chart.viewport_elements = d3.selectAll([
-      chart.chart.xcursorline.node(),
-      chart.chart.ycursorline.node(),
-      chart.chart.coordinates.node()
-    ]);
-
-    console.log('...finished building chart "' + chart.chart_title + '"');
-
-    if (chart.options.live_update) {
+  if (chart.options.live_update) {
       chart.interval = window.setInterval(function() {
-        live_update(chart);
+          live_update(chart);
       }, chart.options.update_interval * 1000);
 
       chart.chart.playpause = chart.chart.container
@@ -3511,7 +3378,152 @@ function build_chart(chart) {
         .attr("y1", 41)
         .attr("x2", 41)
         .attr("y2", 50);
+  }
+
+  console.log('Creating table for chart "' + chart.chart_title + '"...');
+  create_table(chart);
+  console.log(
+      '...finished creating table for chart "' + chart.chart_title + '"'
+  );
+}
+
+function load_datasets(chart) {
+  var x_domain = chart.x.scale.chart.domain();
+  var y_domain = chart.y.scale.chart.domain();
+
+  chart.chart.loading = chart.chart.container
+    .append("text")
+    .classed("loadinglabel middletext", true)
+    .attr(
+      "x",
+      (chart.x.scale.chart(x_domain[1]) - chart.x.scale.chart(x_domain[0])) / 2
+    )
+    .attr(
+      "y",
+      (chart.y.scale.chart(y_domain[0]) - chart.y.scale.chart(y_domain[1])) /
+        2 +
+        35
+    )
+    .text("Loading");
+
+  if (chart.options.csvfiles) {
+    // this path can have no parallelism since it is unknown how
+    // many datasets each CSV file might contain
+    chart.datasets_queue = d3_queue.queue(1);
+
+    for (var i = 0; i < chart.options.csvfiles.length; i++) {
+      // add a dataset load to the queue
+      chart.datasets_queue.defer(
+        load_csv_files,
+        chart.options.csvfiles[i],
+        chart
+      );
     }
+  } else {
+    // this path can have some parallelism, but place a limit on
+    // it to keep things under control
+    chart.datasets_queue = d3_queue.queue(512);
+
+    if (chart.options.packed && chart.options.plotfile) {
+      // add a packed dataset load to the queue
+      chart.datasets_queue.defer(load_plot_file, chart.options.plotfile, chart);
+    } else {
+      if (chart.options.plotfiles) {
+        for (var i = 0; i < chart.options.plotfiles.length; i++) {
+          // add a dataset load to the queue
+          chart.datasets_queue.defer(
+            load_plot_files,
+            chart.options.plotfiles[i],
+            chart,
+            i
+          );
+        }
+      } else {
+        if (chart.options.json_plotfile || chart.options.json_object) {
+          chart.datasets_queue.defer(load_json, chart);
+        }
+      }
+    }
+  }
+
+  console.log('Waiting for content to load for chart "' + chart.chart_title + '".');
+
+  // block waiting for the queue processing to complete before completing the chart
+  chart.datasets_queue.await(function(error, results) {
+    chart.chart.loading.remove();
+    chart.chart.loading = null;
+
+    console.log('...content load complete for chart "' + chart.chart_title + '".');
+
+    if (chart.options.sort_datasets) {
+      if (chart.data_model == "histogram") {
+        console.log(
+          'Sorting datasets descending by histogram mean for chart "' +
+            chart.chart_title +
+            '"...'
+        );
+        chart.datasets.all.sort(dataset_histogram_sort);
+      } else {
+        console.log(
+          'Sorting datasets descending by mean for chart "' +
+            chart.chart_title +
+            '"...'
+        );
+        chart.datasets.all.sort(dataset_sort);
+      }
+      console.log(
+        '...finished sorting datasets for chart "' + chart.chart_title + '"...'
+      );
+
+      // the dataset indexes need to be updated after sorting
+      for (var i = 0; i < chart.datasets.all.length; i++) {
+        chart.datasets.all[i].index = i;
+      }
+    }
+
+    for (var i = 0; i < chart.datasets.all.length; i++) {
+      if (!chart.datasets.all[i].invalid) {
+        chart.datasets.valid.push(chart.datasets.all[i]);
+      } else {
+        console.log(
+          'ERROR: Dataset "' +
+            chart.datasets.all[i].name +
+            '" for chart "' +
+            chart.chart_title +
+            '" is empty.  It has been flagged as invalid and many user actions will be ignored for this dataset.'
+        );
+      }
+    }
+
+    if (chart.datasets.all.length > chart.dataset_count) {
+      console.log('Resizing SVG for chart "' + chart.chart_title + '".');
+      chart.chart.svg.attr(
+        "height",
+        chart.dimensions.viewport_height +
+          chart.dimensions.margin.top +
+          chart.dimensions.margin.bottom +
+          (Math.ceil(
+            chart.datasets.all.length /
+              chart.dimensions.legend_properties.columns
+          ) -
+            1 +
+            chart.options.legend_entries.length) *
+            chart.dimensions.legend_properties.row_height
+      );
+      console.log('...finished resizing SVG for chart "' + chart.chart_title + '".');
+    }
+
+    console.log('Processing datasets for chart "' + chart.chart_title + '"...');
+    create_chart_dataset_objects(chart);
+    table_add_datasets(chart);
+    console.log(
+      '...finished processing datasets for chart "' + chart.chart_title + '"'
+    );
+
+    chart.x.slider.call(chart.x.brush.event);
+    chart.y.slider.call(chart.y.brush.event);
+
+    console.log('...finished building chart "' + chart.chart_title + '"');
   });
 }
 
@@ -3565,10 +3577,11 @@ exports.create_jschart = function(
 };
 
 exports.finish_page = function () {
-  // wait for chart generation to complete before logging that it is done and changing the page background
+  // wait for initial chart generation to complete before logging that it is done and changing the page background
+  // note: chart datasets may still be loading asynchronously
   charts_queue.await(function(error, results) {
     d3.select("body").classed("completedpage", true);
-    console.log("Finished generating all charts");
+    console.log("Finished creating all charts");
   });
 }
 
@@ -4816,13 +4829,13 @@ function apply_name_filter_hide(chart) {
 }
 
 function sort_table(chart) {
-  if (chart.options.sort_datasets) {
+  if (chart.options.sort_datasets && chart.dom.table.data_rows) {
     chart.dom.table.data_rows.sort(datarow_sort);
   }
 }
 
 function sort_table_by_value(chart) {
-  if (chart.options.sort_datasets) {
+  if (chart.options.sort_datasets && chart.dom.table.data_rows) {
     chart.dom.table.data_rows.sort(datarow_sort_by_value);
   }
 }
