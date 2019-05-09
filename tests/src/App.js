@@ -11,6 +11,18 @@ class App extends Component {
     jschart.create_jschart(
       0,
       "timeseries",
+      "jschart_dynamic",
+      "Dynamic Chart Demo",
+      "Time (secs.)",
+      null,
+      {
+        csvfiles: [ timeseries_data ],
+        dynamic_chart: true
+      }
+    );
+    jschart.create_jschart(
+      0,
+      "timeseries",
       "jschart_json",
       "JSON Demo",
       "Time (secs.)",
@@ -90,6 +102,7 @@ class App extends Component {
           <h1 className="App-title">JSChart Demos</h1>
         </header>
         <br></br>
+        <div id="jschart_dynamic"></div>
         <div id="jschart_json"></div>
         <div id="jschart_histogram"></div>
         <div id="jschart_timeseries"></div>
