@@ -17,7 +17,7 @@ function load_jschart_override_options() {
 
   if (imported_options.threshold !== undefined) {
     loaded_options.threshold = +imported_options.threshold;
-    console.log("Found override: threshold=%f", loaded_options.threshold);
+    console.warn("Found override: threshold=%f", loaded_options.threshold);
   }
 
   if (imported_options.threshold_invalidate_on_load !== undefined) {
@@ -29,7 +29,7 @@ function load_jschart_override_options() {
     } else {
       loaded_options.threshold_invalidate_on_load = false;
     }
-    console.log(
+    console.warn(
       "Found override: threshold_invalidate_on_load=%s",
       loaded_options.threshold_invalidate_on_load
     );
@@ -355,7 +355,7 @@ function chart(
 
     this.options.sort_datasets = false;
 
-    console.log(
+    console.warn(
       'Cannot enable dataset sorting for "' +
         this.chart_title +
         '" because it is not compatible with live updates.'
@@ -1251,7 +1251,7 @@ function load_csv_files(url, chart, callback) {
     var index_base = chart.datasets.all.length;
 
     if (text === undefined || error !== null) {
-      console.log('ERROR: Loading "%s" resulted in error "%O".', url, error);
+      console.error('Loading "%s" resulted in error "%O".', url, error);
 
       // create an error object with minimal properties
       chart.datasets.all[index_base - 1] = new dataset(
@@ -1468,7 +1468,7 @@ function load_plot_files(url, chart, index, callback) {
   // populating the graph, avoiding parallelism issues
   d3.text(url, "text/plain").get(function(error, text) {
     if (text === undefined || error !== null) {
-      console.log('ERROR: Loading "%s" resulted in error "%O".', url, error);
+      console.error('Loading "%s" resulted in error "%O".', url, error);
 
       // create an error object with minimal properties
       chart.datasets.all[index] = new dataset(
@@ -2647,7 +2647,7 @@ function build_chart(chart) {
         '"'
     );
   } else {
-    console.log(
+    console.error(
       'An unsupported data_model ["' +
         chart.data_model +
         '"] was specified for chart "' +
@@ -2662,7 +2662,7 @@ function build_chart(chart) {
   chart.dom.div = d3.select("#" + chart.location);
 
   if (chart.dom.div.empty()) {
-    console.log(
+    console.error(
       'Failed to locate div for "' +
         chart.chart_title +
         '" identified by "' +
@@ -3026,7 +3026,7 @@ function build_chart(chart) {
         }
 
         if (domain_check) {
-          console.log(
+          console.warn(
             'Skipping application of X-Axis zoom from "' +
               chart.chart_title +
               '" to "' +
@@ -3485,8 +3485,8 @@ function load_datasets(chart) {
       if (!chart.datasets.all[i].invalid) {
         chart.datasets.valid.push(chart.datasets.all[i]);
       } else {
-        console.log(
-          'ERROR: Dataset "' +
+        console.error(
+          'Dataset "' +
             chart.datasets.all[i].name +
             '" for chart "' +
             chart.chart_title +
