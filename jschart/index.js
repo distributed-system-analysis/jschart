@@ -212,7 +212,8 @@ function chart(
     view_port_table_controls_visible: true,
     misc_controls_table_controls_visible: true,
     custom_domain: false,
-    reset: false
+    reset: false,
+    legend_columns: 5
   };
 
   this.functions = { area: null, stack: null, line: null };
@@ -226,7 +227,7 @@ function chart(
 
   this.dimensions = {
     margin: { top: 70, right: 87, bottom: 66, left: 65 },
-    legend_properties: { columns: 5, row_height: 30, margin: { top: 37 } },
+    legend_properties: { row_height: 30, margin: { top: 37 } },
     total_width: 1000,
     total_height: 510,
     pixels_per_letter: 7.2
@@ -1557,8 +1558,8 @@ function navigate_to_chart(target) {
 function create_chart_dataset_objects(chart) {
   update_domains(chart);
 
-  if (chart.datasets.all.length < chart.dimensions.legend_properties.columns) {
-    chart.dimensions.legend_properties.columns = chart.datasets.all.length;
+  if (chart.datasets.all.length < chart.state.legend_columns) {
+    chart.state.legend_columns = chart.datasets.all.length;
   }
 
   chart.chart.legend = chart.chart.container
@@ -1572,13 +1573,13 @@ function create_chart_dataset_objects(chart) {
         "translate(" +
         (-chart.dimensions.margin.left +
           5 +
-          (i % chart.dimensions.legend_properties.columns) *
+          (i % chart.state.legend_columns) *
             (chart.dimensions.total_width /
-              chart.dimensions.legend_properties.columns)) +
+              chart.state.legend_columns)) +
         "," +
         (chart.dimensions.viewport_height +
           chart.dimensions.legend_properties.margin.top +
-          Math.floor(i / chart.dimensions.legend_properties.columns) *
+          Math.floor(i / chart.state.legend_columns) *
             chart.dimensions.legend_properties.row_height) +
         ")"
       );
@@ -1640,7 +1641,7 @@ function create_chart_dataset_objects(chart) {
     if (
       label_width >=
       chart.dimensions.total_width /
-        chart.dimensions.legend_properties.columns -
+        chart.state.legend_columns -
         legend_label_offset
     ) {
       var label = d3.select(this);
@@ -1668,7 +1669,7 @@ function create_chart_dataset_objects(chart) {
             chart.dimensions.legend_properties.margin.top +
             (Math.floor(
               chart.datasets.all.length /
-                chart.dimensions.legend_properties.columns
+                chart.state.legend_columns
             ) +
               i) *
               chart.dimensions.legend_properties.row_height) +
@@ -5238,6 +5239,9 @@ function reset_chart(chart) {
     chart.datasets.all.pop();
   }
 
+  chart.state.visible_datasets = 0;
+  chart.state.legend_columns = 5;
+
   chart.dataset_count = 0;
 
   reset_axes_domains(chart);
@@ -5251,7 +5255,7 @@ function get_svg_height(chart) {
   return chart.dimensions.viewport_height +
          chart.dimensions.margin.top +
          chart.dimensions.margin.bottom +
-         ( Math.ceil(chart.datasets.all.length / chart.dimensions.legend_properties.columns) -
+         ( Math.ceil(chart.datasets.all.length / chart.state.legend_columns) -
            1 + chart.options.legend_entries.length
 	 ) * chart.dimensions.legend_properties.row_height;
 }
