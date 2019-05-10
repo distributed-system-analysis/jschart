@@ -6,8 +6,51 @@ import timeseries_data from './data/timeseries.csv';
 import xy_data from './data/xy.csv';
 import jitter_data from './data/jitter.csv';
 
+const d3 = require("d3");
+
+var choices = [
+  {
+    "label": "Null",
+    "object": { }
+  },
+  {
+    "label": "Histogram",
+    "object": { csvfiles: [ histogram_data ] }
+  },
+  {
+    "label": "Jitter",
+    "object": { csvfiles: [ jitter_data ] }
+  },
+  {
+    "label": "Jitter - Scatter",
+    "object": { csvfiles: [ jitter_data ], scatterplot: true }
+  }
+];
+for (var i = 0; i < choices.length; i++) {
+  choices[i].index = i;
+}
+
+function change_selection() {
+  jschart.chart_reload("jschart_dynamic", choices[this.value].object);
+}
+
+function setup_dynamic_chart_selection_box() {
+  var myselect = d3.select("#select_dataset")
+    .append("select")
+    .on("change", change_selection)
+
+  myselect.selectAll(".options")
+    .data(choices)
+    .enter()
+    .append("option")
+    .attr("value", function(d) { return d.index; })
+    .text(function(d) { return d.label; });
+}
+
 class App extends Component {
   componentDidMount = () => {
+    setup_dynamic_chart_selection_box();
+
     jschart.create_jschart(
       0,
       "timeseries",
@@ -16,7 +59,6 @@ class App extends Component {
       "Time (secs.)",
       null,
       {
-        csvfiles: [ timeseries_data ],
         dynamic_chart: true
       }
     );
@@ -102,12 +144,20 @@ class App extends Component {
           <h1 className="App-title">JSChart Demos</h1>
         </header>
         <br></br>
-        <div id="jschart_dynamic"></div>
+        <div id="jschart_dynamic">
+          <h3 id="select_dataset">
+	    Dynamic Chart Dataset Selection:
+	  </h3>
+	</div>
+        <br/>
         <div id="jschart_json"></div>
+        <br/>
         <div id="jschart_histogram"></div>
         <div id="jschart_timeseries"></div>
+        <br/>
         <div id="jschart_xy"></div>
         <div id="jschart_jitter"></div>
+        <br/>
         <div id="jschart_jitter_scatter"></div>
 	</div>
     );
