@@ -14,10 +14,6 @@ var choices = [
     "object": { }
   },
   {
-    "label": "Histogram",
-    "object": { csvfiles: [ histogram_data ] }
-  },
-  {
     "label": "Jitter",
     "object": { csvfiles: [ jitter_data ] }
   },
@@ -53,11 +49,11 @@ class App extends Component {
 
     jschart.create_jschart(
       0,
-      "timeseries",
+      "xy",
       "jschart_dynamic",
       "Dynamic Chart Demo",
-      "Time (secs.)",
-      null,
+      "Samples",
+      "Latency (ns)",
       {
         dynamic_chart: true
       }
