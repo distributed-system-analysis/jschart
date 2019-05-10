@@ -220,32 +220,6 @@ function chart(
   this.datasets_queue = null;
   this.datasets = { all: [], valid: [] };
 
-  this.options = {
-    timezone: null,
-    legend_entries: null,
-    packed: 0,
-    plotfiles: null,
-    csvfiles: null,
-    plotfile: null,
-    json_plotfile: null,
-    json_object: null,
-    json_args: null,
-    raw_data_source: [],
-    update_interval: null,
-    live_update: false,
-    history_length: null,
-    hide_dataset_threshold: null,
-    sort_datasets: true,
-    x: {
-      min: null,
-      max: null,
-      scale: { linear: true, log: false, time: false }
-    },
-    y: { min: null, max: null, scale: { linear: true, log: false } },
-    scatterplot: false,
-    dynamic_chart: false
-  };
-
   this.interval = null;
   this.zoom_rate = 3;
   this.y_axis_overscale = 2;
@@ -286,125 +260,151 @@ function chart(
 
   this.parsers = { space: d3.dsv(" ", "text/plain") };
 
+  this.options = setup_chart_options(this, options);
+}
+
+function setup_chart_options(chart, options) {
+  var the_options = {
+    timezone: null,
+    legend_entries: null,
+    packed: 0,
+    plotfiles: null,
+    csvfiles: null,
+    plotfile: null,
+    json_plotfile: null,
+    json_object: null,
+    json_args: null,
+    raw_data_source: [],
+    update_interval: null,
+    live_update: false,
+    history_length: null,
+    hide_dataset_threshold: null,
+    sort_datasets: true,
+    x: {
+      min: null,
+      max: null,
+      scale: { linear: true, log: false, time: false }
+    },
+    y: { min: null, max: null, scale: { linear: true, log: false } },
+    scatterplot: false,
+    dynamic_chart: false
+  };
+
   // option(s) "parsing"
-  if (this.data_model == "timeseries") {
-    this.options.x.scale.time = true;
-    this.options.x.scale.linear = false;
+  if (chart.data_model == "timeseries") {
+    the_options.x.scale.time = true;
+    the_options.x.scale.linear = false;
   } else {
     if (options.x_log_scale !== undefined && options.x_log_scale) {
-      this.options.x.scale.log = true;
-      this.options.x.scale.linear = false;
+      the_options.x.scale.log = true;
+      the_options.x.scale.linear = false;
     }
   }
 
   if (options.dynamic_chart !== undefined && options.dynamic_chart) {
-    this.options.dynamic_chart = true;
+    the_options.dynamic_chart = true;
   }
 
   if (options.y_log_scale !== undefined && options.y_log_scale) {
-    this.options.y.scale.log = true;
-    this.options.y.scale.linear = false;
+    the_options.y.scale.log = true;
+    the_options.y.scale.linear = false;
   }
 
   if (options.timeseries_timezone !== undefined) {
-    this.options.timezone = options.timeseries_timezone;
+    the_options.timezone = options.timeseries_timezone;
   }
 
   if (options.legend_entries !== undefined) {
-    this.options.legend_entries = options.legend_entries;
+    the_options.legend_entries = options.legend_entries;
   } else {
-    this.options.legend_entries = [];
+    the_options.legend_entries = [];
   }
 
   if (options.packed !== undefined) {
-    this.options.packed = options.packed;
-    this.dataset_count = this.options.packed;
+    the_options.packed = options.packed;
+    chart.dataset_count = the_options.packed;
   } else if (options.plotfiles !== undefined) {
-    this.options.plotfiles = options.plotfiles;
-    this.dataset_count = this.options.plotfiles.length;
+    the_options.plotfiles = options.plotfiles;
+    chart.dataset_count = the_options.plotfiles.length;
   }
 
   if (options.csvfiles !== undefined) {
-    this.options.csvfiles = options.csvfiles;
+    the_options.csvfiles = options.csvfiles;
   }
 
   if (options.plotfile !== undefined) {
-    this.options.plotfile = options.plotfile;
+    the_options.plotfile = options.plotfile;
   }
 
   if (options.plotfiles !== undefined) {
-    this.options.plotfiles = options.plotfiles;
+    the_options.plotfiles = options.plotfiles;
   }
 
   if (options.json_plotfile !== undefined) {
-    this.options.json_plotfile = options.json_plotfile;
+    the_options.json_plotfile = options.json_plotfile;
   }
 
   if (options.json_object !== undefined) {
-    this.options.json_object = options.json_object;
+    the_options.json_object = options.json_object;
   }
 
   if (options.json_args !== undefined) {
-    this.options.json_args = options.json_args;
+    the_options.json_args = options.json_args;
   }
 
   if (options.raw_data_sources !== undefined) {
-    this.options.raw_data_sources = options.raw_data_sources;
+    the_options.raw_data_sources = options.raw_data_sources;
   } else {
-    this.options.raw_data_sources = [];
+    the_options.raw_data_sources = [];
   }
 
   if (options.update_interval !== undefined) {
-    this.options.live_update = true;
+    the_options.live_update = true;
 
-    this.options.update_interval = options.update_interval;
+    the_options.update_interval = options.update_interval;
 
-    this.options.sort_datasets = false;
+    the_options.sort_datasets = false;
 
-    console.warn(
-      'Cannot enable dataset sorting for "' +
-        this.chart_title +
-        '" because it is not compatible with live updates.'
-    );
+    console.warn('Cannot enable dataset sorting for "' + chart.chart_title + '" because it is not compatible with live updates.');
   } else if (options.sort_datasets !== undefined) {
-    this.options.sort_datasets = options.sort_datasets;
+    the_options.sort_datasets = options.sort_datasets;
   }
 
   if (options.history_length !== undefined) {
-    this.options.history_length = options.history_length;
+    the_options.history_length = options.history_length;
   }
 
   if (options.x_min !== undefined) {
-    this.options.x.min = options.x_min;
+    the_options.x.min = options.x_min;
   }
 
   if (options.x_max !== undefined) {
-    this.options.x.max = options.x_max;
+    the_options.x.max = options.x_max;
   }
 
   if (options.y_min !== undefined) {
-    this.options.y.min = options.y_min;
+    the_options.y.min = options.y_min;
   }
 
   if (options.y_max !== undefined) {
-    this.options.y.max = options.y_max;
+    the_options.y.max = options.y_max;
   }
 
   if (options.threshold !== undefined) {
-    this.options.hide_dataset_threshold = options.threshold;
+    the_options.hide_dataset_threshold = options.threshold;
   }
 
-  if (
-    !this.stacked &&
-    options.scatterplot !== undefined &&
-    options.scatterplot
-  ) {
-    this.options.scatterplot = true;
+  if (!chart.stacked &&
+      options.scatterplot !== undefined &&
+      options.scatterplot) {
+    the_options.scatterplot = true;
   }
 
   if (jschart_override_options.threshold !== undefined) {
-    this.options.hide_dataset_threshold = jschart_override_options.threshold;
+    the_options.hide_dataset_threshold = jschart_override_options.threshold;
   }
+
+  return the_options;
 }
 
 function compute_stacked_median(chart) {
@@ -3415,6 +3415,61 @@ function build_chart(chart) {
 }
 
 function load_datasets(chart) {
+  var queued_datasets = 0;
+
+  if (chart.options.csvfiles) {
+    // this path can have no parallelism since it is unknown how
+    // many datasets each CSV file might contain
+    chart.datasets_queue = d3_queue.queue(1);
+
+    for (var i = 0; i < chart.options.csvfiles.length; i++) {
+      queued_datasets++;
+
+      // add a dataset load to the queue
+      chart.datasets_queue.defer(
+        load_csv_files,
+        chart.options.csvfiles[i],
+        chart
+      );
+    }
+  } else {
+    // this path can have some parallelism, but place a limit on
+    // it to keep things under control
+    chart.datasets_queue = d3_queue.queue(512);
+
+    if (chart.options.packed && chart.options.plotfile) {
+      queued_datasets++;
+
+      // add a packed dataset load to the queue
+      chart.datasets_queue.defer(load_plot_file, chart.options.plotfile, chart);
+    } else {
+      if (chart.options.plotfiles) {
+        for (var i = 0; i < chart.options.plotfiles.length; i++) {
+          queued_datasets++;
+
+          // add a dataset load to the queue
+          chart.datasets_queue.defer(
+            load_plot_files,
+            chart.options.plotfiles[i],
+            chart,
+            i
+          );
+        }
+      } else {
+        if (chart.options.json_plotfile || chart.options.json_object) {
+          queued_datasets++;
+
+          chart.datasets_queue.defer(load_json, chart);
+        }
+      }
+    }
+  }
+
+  if (queued_datasets == 0) {
+    console.warn("No datasets loaded for chart '" + chart.chart_title + "'.")
+    return;
+  }
+
   var x_domain = chart.x.scale.chart.domain();
   var y_domain = chart.y.scale.chart.domain();
 
@@ -3432,46 +3487,6 @@ function load_datasets(chart) {
         35
     )
     .text("Loading");
-
-  if (chart.options.csvfiles) {
-    // this path can have no parallelism since it is unknown how
-    // many datasets each CSV file might contain
-    chart.datasets_queue = d3_queue.queue(1);
-
-    for (var i = 0; i < chart.options.csvfiles.length; i++) {
-      // add a dataset load to the queue
-      chart.datasets_queue.defer(
-        load_csv_files,
-        chart.options.csvfiles[i],
-        chart
-      );
-    }
-  } else {
-    // this path can have some parallelism, but place a limit on
-    // it to keep things under control
-    chart.datasets_queue = d3_queue.queue(512);
-
-    if (chart.options.packed && chart.options.plotfile) {
-      // add a packed dataset load to the queue
-      chart.datasets_queue.defer(load_plot_file, chart.options.plotfile, chart);
-    } else {
-      if (chart.options.plotfiles) {
-        for (var i = 0; i < chart.options.plotfiles.length; i++) {
-          // add a dataset load to the queue
-          chart.datasets_queue.defer(
-            load_plot_files,
-            chart.options.plotfiles[i],
-            chart,
-            i
-          );
-        }
-      } else {
-        if (chart.options.json_plotfile || chart.options.json_object) {
-          chart.datasets_queue.defer(load_json, chart);
-        }
-      }
-    }
-  }
 
   console.log('Waiting for content to load for chart "' + chart.chart_title + '".');
 
@@ -5183,19 +5198,31 @@ function display_help() {
 }
 
 function reset_chart(chart) {
+  if (chart.state.reset) {
+    return;
+  }
+
   console.warn("resetting chart '" + chart.chart_title + "'.");
 
-  chart.chart.cursor_points.remove();
-  chart.chart.cursor_points = null;
+  if (chart.chart.cursor_points) {
+    chart.chart.cursor_points.remove();
+    chart.chart.cursor_points = null;
+  }
 
-  chart.chart.legend.remove();
-  chart.chart.legend = null;
+  if (chart.chart.legend) {
+    chart.chart.legend.remove();
+    chart.chart.legend = null;
+  }
 
-  chart.chart.plot.remove();
-  chart.chart.plot = null;
+  if (chart.chart.plot) {
+    chart.chart.plot.remove();
+    chart.chart.plot = null;
+  }
 
-  chart.dom.table.data_rows.remove();
-  chart.dom.table.data_rows = null;
+  if (chart.dom.table.data_rows) {
+    chart.dom.table.data_rows.remove();
+    chart.dom.table.data_rows = null;
+  }
 
   for (var i = chart.datasets.all.length - 1; i >= 0; i--) {
     if (chart.options.scatterplot) {
@@ -5239,4 +5266,31 @@ function reload_chart(chart) {
   load_datasets(chart);
 
   chart.state.reset = false;
+}
+
+exports.chart_reload = function(location, options) {
+    console.log("Attempting to reload chart at location '" + location + "'.");
+
+    var chart = null;
+    for (var i = 0; i < charts.length; i++) {
+      if (charts[i].location == location) {
+        chart = charts[charts[i].charts_index];
+        break;
+      }
+    }
+
+    if (!chart) {
+      console.error("Could not locate chart at location '" + location + "'.");
+      return;
+    }
+
+    console.log("Reloading chart '" + chart.chart_title + "' at location '" + chart.location + "'.");
+
+    reset_chart(chart);
+
+    chart.options = setup_chart_options(chart, options);
+
+    load_datasets(chart);
+
+    chart.state.reset = false;
 }
