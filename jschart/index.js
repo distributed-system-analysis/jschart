@@ -103,7 +103,7 @@ function dataset(index, name, mean, median, values, chart) {
     points: null,
     cursor_point: null,
     markers: null,
-    legend: { rect: null, label: null }
+    legend: { rect: null, outline: null, label: null }
   };
   this.values = [];
   this.values_index = -1;
@@ -187,9 +187,9 @@ function chart(
       },
       misc_controls: {
         table: null,
-        rows: { header: null, sorting: null },
+        rows: { header: null, sorting: null, dynamic: null },
         toggle_hide: null,
-        inputs: { sort_datasets: null }
+          inputs: { sort_datasets: null, reset_chart: null, reload_chart: null }
       }
     }
   };
@@ -211,7 +211,8 @@ function chart(
     mouse: null,
     view_port_table_controls_visible: true,
     misc_controls_table_controls_visible: true,
-    custom_domain: false
+    custom_domain: false,
+    reset: false
   };
 
   this.functions = { area: null, stack: null, line: null };
@@ -241,7 +242,8 @@ function chart(
       scale: { linear: true, log: false, time: false }
     },
     y: { min: null, max: null, scale: { linear: true, log: false } },
-    scatterplot: false
+    scatterplot: false,
+    dynamic_chart: false
   };
 
   this.interval = null;
@@ -293,6 +295,10 @@ function chart(
       this.options.x.scale.log = true;
       this.options.x.scale.linear = false;
     }
+  }
+
+  if (options.dynamic_chart !== undefined && options.dynamic_chart) {
+    this.options.dynamic_chart = true;
   }
 
   if (options.y_log_scale !== undefined && options.y_log_scale) {
@@ -1580,7 +1586,10 @@ function create_chart_dataset_objects(chart) {
 
   chart.chart.legend
     .append("rect")
-    .classed("legendrectoutline", true)
+    .classed("legendrectoutline", function(d) {
+      d.dom.legend.outline = d3.select(this);
+      return true;
+    })
     .attr("width", 16)
     .attr("height", 16)
     .style("stroke", function(d) {
@@ -2162,6 +2171,35 @@ function create_table(chart) {
       }
     })
     .on("click", toggle_table_sort_datasets);
+
+  if (chart.options.dynamic_chart) {
+    chart.dom.table.misc_controls.rows.dynamic = chart.dom.table.misc_controls.table
+      .append("tr")
+      .classed("controls", true);
+
+    chart.dom.table.misc_controls.rows.dynamic.append("th").text("Dynamic Chart");
+
+    var cell = chart.dom.table.misc_controls.rows.dynamic
+      .append("td")
+      .attr("colSpan", 3);
+
+    chart.dom.table.misc_controls.inputs.reset_chart = cell
+      .selectAll(".reset_chart")
+      .data([chart])
+      .enter()
+      .append("button")
+      .text("Reset")
+      .on("click", reset_chart);
+
+    chart.dom.table.misc_controls.inputs.reset_chart = cell
+      .selectAll(".reload_chart")
+      .data([chart])
+      .enter()
+      .append("button")
+      .text("Reload")
+      .on("click", reload_chart);
+
+  }
 
   toggle_hide_misc_controls_table_controls(chart);
 
@@ -2783,18 +2821,7 @@ function build_chart(chart) {
         chart.dimensions.margin.left +
         chart.dimensions.margin.right
     )
-    .attr(
-      "height",
-      chart.dimensions.viewport_height +
-        chart.dimensions.margin.top +
-        chart.dimensions.margin.bottom +
-        (Math.ceil(
-          chart.dataset_count / chart.dimensions.legend_properties.columns
-        ) -
-          1 +
-          chart.options.legend_entries.length) *
-          chart.dimensions.legend_properties.row_height
-    );
+    .attr("height", get_svg_height(chart));
 
   chart.chart.defs = chart.chart.svg.append("defs");
   if (!chart.options.scatterplot) {
@@ -3497,19 +3524,7 @@ function load_datasets(chart) {
 
     if (chart.datasets.all.length > chart.dataset_count) {
       console.log('Resizing SVG for chart "' + chart.chart_title + '".');
-      chart.chart.svg.attr(
-        "height",
-        chart.dimensions.viewport_height +
-          chart.dimensions.margin.top +
-          chart.dimensions.margin.bottom +
-          (Math.ceil(
-            chart.datasets.all.length /
-              chart.dimensions.legend_properties.columns
-          ) -
-            1 +
-            chart.options.legend_entries.length) *
-            chart.dimensions.legend_properties.row_height
-      );
+      chart.chart.svg.attr("height", get_svg_height(chart));
       console.log('...finished resizing SVG for chart "' + chart.chart_title + '".');
     }
 
@@ -5016,10 +5031,16 @@ function toggle_hide_misc_controls_table_controls(chart) {
   if (chart.state.misc_controls_table_controls_visible) {
     chart.dom.table.misc_controls.toggle_hide.text("+ Misc. Controls");
     chart.dom.table.misc_controls.rows.sorting.classed("nodisplay", true);
+    if (chart.options.dynamic_chart) {
+      chart.dom.table.misc_controls.rows.dynamic.classed("nodisplay", true);
+    }
     chart.state.misc_controls_table_controls_visible = false;
   } else {
     chart.dom.table.misc_controls.toggle_hide.text("- Misc. Controls");
     chart.dom.table.misc_controls.rows.sorting.classed("nodisplay", false);
+    if (chart.options.dynamic_chart) {
+      chart.dom.table.misc_controls.rows.dynamic.classed("nodisplay", false);
+    }
     chart.state.misc_controls_table_controls_visible = true;
   }
 }
@@ -5159,4 +5180,63 @@ function display_help() {
 
   console.log(help);
   alert(help);
+}
+
+function reset_chart(chart) {
+  console.warn("resetting chart '" + chart.chart_title + "'.");
+
+  chart.chart.cursor_points.remove();
+  chart.chart.cursor_points = null;
+
+  chart.chart.legend.remove();
+  chart.chart.legend = null;
+
+  chart.chart.plot.remove();
+  chart.chart.plot = null;
+
+  chart.dom.table.data_rows.remove();
+  chart.dom.table.data_rows = null;
+
+  for (var i = chart.datasets.all.length - 1; i >= 0; i--) {
+    if (chart.options.scatterplot) {
+      chart.datasets.all[i].dom.markers.remove();
+    }
+  }
+
+  while (chart.datasets.valid.length) {
+    chart.datasets.valid.pop();
+  }
+
+  while (chart.datasets.all.length) {
+    chart.datasets.all.pop();
+  }
+
+  chart.dataset_count = 0;
+
+  reset_axes_domains(chart);
+
+  chart.chart.svg.attr("height", get_svg_height(chart));
+
+  chart.state.reset = true;
+}
+
+function get_svg_height(chart) {
+  return chart.dimensions.viewport_height +
+         chart.dimensions.margin.top +
+         chart.dimensions.margin.bottom +
+         ( Math.ceil(chart.datasets.all.length / chart.dimensions.legend_properties.columns) -
+           1 + chart.options.legend_entries.length
+	 ) * chart.dimensions.legend_properties.row_height;
+}
+
+function reload_chart(chart) {
+  if (!chart.state.reset) {
+    reset_chart(chart);
+  }
+
+  console.warn("reloading chart '" + chart.chart_title + "'.");
+
+  load_datasets(chart);
+
+  chart.state.reset = false;
 }
