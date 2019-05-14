@@ -3247,7 +3247,7 @@ function build_chart(chart) {
     for (var i = 0; i < chart.options.csvfiles.length; i++) {
       // add a dataset load to the queue
       chart.datasets_queue.defer(
-        load_csv_text,
+        load_csv_files,
         chart.options.csvfiles[i],
         chart
       );
@@ -3564,7 +3564,7 @@ exports.create_jschart = function(
   );
 };
 
-function finish_page() {
+exports.finish_page = function () {
   // wait for chart generation to complete before logging that it is done and changing the page background
   charts_queue.await(function(error, results) {
     d3.select("body").classed("completedpage", true);
