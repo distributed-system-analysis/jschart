@@ -52,34 +52,35 @@ The `tests` directory represents the testing environment for ensuring native fun
 Install Testing Environment Dependencies
 
 ```bash
-$ npm install
+$ yarn install
 ```
 
 Install Local jschart Node Module
 
 ```bash
-$ npm install --save ../jschart/
+$ cd jschart  
+$ yarn link
+$ cd ../tests 
+$ yarn link "jschart"
 ```
 
-This will create a reference to the `jschart/` directory under dependencies in `package.json`:
+Verify Local jschart Node Module Installation
 
-```
-"dependencies": {
-  "jschart": "file:jschart"
-}
+```bash
+$ readlink -e node_modules/jschart
 ```
 
 Start Development Server
 
 ```bash
-$ npm start
+$ yarn start
 ```
 
 ## Publishing Node Module
 
 ```bash
-$ npm login
-$ npm publish
+$ yarn login
+$ yarn publish
 ```
 
 ## Detailed Usage
