@@ -55,7 +55,7 @@ class App extends Component {
       "jschart_dynamic",
       "Dynamic Chart Demo",
       "Samples",
-      "Latency (ns)",
+      "Latency (ms)",
       {
         dynamic_chart: true
       }

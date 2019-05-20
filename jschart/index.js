@@ -5241,6 +5241,7 @@ function reset_chart(chart) {
 
   chart.state.visible_datasets = 0;
   chart.state.legend_columns = 5;
+  chart.state.chart_selection = -1;
 
   chart.dataset_count = 0;
 
