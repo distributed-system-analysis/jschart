@@ -5,6 +5,8 @@ import histogram_data from './data/histogram.csv';
 import timeseries_data from './data/timeseries.csv';
 import xy_data from './data/xy.csv';
 import jitter_data from './data/jitter.csv';
+import dynamic_data_1 from './data/ts1.csv';
+import dynamic_data_2 from './data/ts2.csv';
 
 const d3 = require("d3");
 
@@ -14,12 +16,12 @@ var choices = [
     "object": { }
   },
   {
-    "label": "Jitter",
-    "object": { csvfiles: [ jitter_data ] }
+    "label": "Dataset 1",
+    "object": { csvfiles: [ dynamic_data_1 ] }
   },
   {
-    "label": "Jitter - Scatter",
-    "object": { csvfiles: [ jitter_data ], scatterplot: true }
+    "label": "Dataset 2",
+    "object": { csvfiles: [ dynamic_data_2 ] }
   }
 ];
 for (var i = 0; i < choices.length; i++) {
