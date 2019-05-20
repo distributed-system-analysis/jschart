@@ -5203,7 +5203,7 @@ function reset_chart(chart) {
     return;
   }
 
-  console.warn("resetting chart '" + chart.chart_title + "'.");
+  console.log("Resetting chart '" + chart.chart_title + "'.");
 
   if (chart.chart.cursor_points) {
     chart.chart.cursor_points.remove();
@@ -5266,7 +5266,7 @@ function reload_chart(chart) {
     reset_chart(chart);
   }
 
-  console.warn("reloading chart '" + chart.chart_title + "'.");
+  console.log("Reloading chart '" + chart.chart_title + "'.");
 
   load_datasets(chart);
 
