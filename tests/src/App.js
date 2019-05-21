@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import jschart from "jschart";
+import d3 from "d3";
 
 import histogram_data from './data/histogram.csv';
 import timeseries_data from './data/timeseries.csv';
@@ -7,8 +8,6 @@ import xy_data from './data/xy.csv';
 import jitter_data from './data/jitter.csv';
 import dynamic_data_1 from './data/ts1.csv';
 import dynamic_data_2 from './data/ts2.csv';
-
-const d3 = require("d3");
 
 var choices = [
   {
