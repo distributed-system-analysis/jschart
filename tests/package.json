@@ -1,10 +1,11 @@
 {
   "name": "jschart_test",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "EPL-1.0",
   "dependencies": {
     "axios": "^0.18.0",
+    "d3": "3.5.17",
     "jschart": "file:../jschart",
     "react": "^16.5.1",
     "react-dom": "^16.5.1",
