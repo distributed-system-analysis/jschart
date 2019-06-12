@@ -1051,16 +1051,16 @@ function parse_json(json, chart, callback) {
 }
 
 function load_json(chart, callback) {
-  var post_data = "";
-
-  if (chart.options.json_args) {
-    post_data += chart.options.json_args;
-  }
-
   if (chart.options.json_object !== undefined) {
     var json = chart.options.json_object;
     parse_json(json, chart, callback);
   } else {
+    var post_data = "";
+
+    if (chart.options.json_args) {
+      post_data += chart.options.json_args;
+    }
+
     d3.json(chart.options.json_plotfile)
       .header("Content-Type", "application/x-www-form-urlencoded")
       .post(post_data, function(error, json) {
