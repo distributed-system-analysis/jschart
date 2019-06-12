@@ -171,7 +171,11 @@ function chart(
     table: {
       location: null,
       table: null,
-      stacked: { median: null, mean: null, value: null },
+      stacked: {
+        median: null, median_row: null,
+        mean: null, mean_row: null,
+        value: null, value_row: null
+      },
       live_update: { history: null, interval: null },
       threshold: null,
       name_filter: null,
@@ -2410,60 +2414,60 @@ function table_add_datasets(chart) {
   chart.dom.table.data_rows = chart.dom.table.table.selectAll("#datarow");
 
   if (chart.stacked) {
-    var row = chart.dom.table.table.append("tr").classed("footer", true);
+    chart.dom.table.stacked.value_row = chart.dom.table.table.append("tr").classed("footer", true);
 
-    row
+    chart.dom.table.stacked.value_row
       .append("th")
       .attr("align", "left")
       .text("Combined Value");
 
-    chart.dom.table.stacked.value = row.append("td").attr("align", "right");
+    chart.dom.table.stacked.value = chart.dom.table.stacked.value_row.append("td").attr("align", "right");
 
-    row.append("td");
+    chart.dom.table.stacked.value_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.value_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.value_row.append("td");
 
-    var row = chart.dom.table.table.append("tr").classed("footer", true);
+    chart.dom.table.stacked.mean_row = chart.dom.table.table.append("tr").classed("footer", true);
 
-    row
+    chart.dom.table.stacked.mean_row
       .append("th")
       .attr("align", "left")
       .text("Combined Average");
 
-    row.append("td");
+    chart.dom.table.stacked.mean_row.append("td");
 
     compute_stacked_mean(chart);
 
-    chart.dom.table.stacked.mean = row
+    chart.dom.table.stacked.mean = chart.dom.table.stacked.mean_row
       .append("td")
       .attr("align", "right")
       .text(table_print(chart, chart.table.stacked_mean));
 
-    row.append("td");
+    chart.dom.table.stacked.mean_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.mean_row.append("td");
 
-    var row = chart.dom.table.table.append("tr").classed("footer", true);
+    chart.dom.table.stacked.median_row = chart.dom.table.table.append("tr").classed("footer", true);
 
-    row
+    chart.dom.table.stacked.median_row
       .append("th")
       .attr("align", "left")
       .text("Combined Median");
 
-    row.append("td");
+    chart.dom.table.stacked.median_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.median_row.append("td");
 
     compute_stacked_median(chart);
 
-    chart.dom.table.stacked.median = row
+    chart.dom.table.stacked.median = chart.dom.table.stacked.median_row
       .append("td")
       .attr("align", "right")
       .text(table_print(chart, chart.table.stacked_median));
 
-    row.append("td");
+    chart.dom.table.stacked.median_row.append("td");
   }
 
   if (chart.options.raw_data_sources.length > 0) {
@@ -4222,7 +4226,9 @@ function set_dataset_value(chart, dataset_index, values_index) {
 }
 
 function set_stacked_value(chart, value) {
-  chart.dom.table.stacked.value.text(value);
+  if (chart.dom.table.stacked.value) {
+    chart.dom.table.stacked.value.text(value);
+  }
 }
 
 function show_dataset_values(chart, x_coordinate) {
@@ -5223,6 +5229,26 @@ function reset_chart(chart) {
   if (chart.dom.table.data_rows) {
     chart.dom.table.data_rows.remove();
     chart.dom.table.data_rows = null;
+  }
+
+  if (chart.stacked) {
+    if (chart.dom.table.stacked.median_row) {
+      chart.dom.table.stacked.median_row.remove();
+      chart.dom.table.stacked.median_row = null;
+      chart.dom.table.stacked.median = null;
+    }
+
+    if (chart.dom.table.stacked.mean_row) {
+      chart.dom.table.stacked.mean_row.remove();
+      chart.dom.table.stacked.mean_row = null;
+      chart.dom.table.stacked.mean = null;
+    }
+
+    if (chart.dom.table.stacked.value_row) {
+      chart.dom.table.stacked.value_row.remove();
+      chart.dom.table.stacked.value_row = null;
+      chart.dom.table.stacked.value = null;
+    }
   }
 
   for (var i = chart.datasets.all.length - 1; i >= 0; i--) {
