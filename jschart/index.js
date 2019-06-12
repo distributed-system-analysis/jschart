@@ -276,6 +276,8 @@ function setup_chart_options(chart, options) {
     plotfiles: null,
     csvfiles: null,
     plotfile: null,
+    cdmjson_url: null,
+    cdmjson_object: null,
     json_plotfile: null,
     json_object: null,
     json_args: null,
@@ -355,6 +357,14 @@ function setup_chart_options(chart, options) {
 
   if (options.json_args !== undefined) {
     the_options.json_args = options.json_args;
+  }
+
+  if (options.cdmjson_object !== undefined) {
+    the_options.cdmjson_object = options.cdmjson_object;
+  }
+
+  if (options.cdmjson_url !== undefined) {
+    the_options.cdmjson_url = options.cdmjson_url;
   }
 
   if (options.raw_data_sources !== undefined) {
@@ -951,6 +961,47 @@ function live_update(chart) {
     });
 }
 
+function parse_cdmjson(json, chart, callback) {
+  if (json !== undefined && json.breakouts !== undefined && json.values !== undefined) {
+    var dataset_index = 0;
+    for (var key in json.values) {
+      chart.datasets.all[dataset_index] = new dataset(dataset_index, key, 0, 0, [], chart);
+
+      var i = 0;
+      for (i = 0; i < json.values[key].length; i++) {
+        chart.datasets.all[dataset_index].values.push(new datapoint(json.values[key][i]['begin'],
+								    json.values[key][i]['value'],
+								    chart.datasets.all[dataset_index],
+								    json.values[key][i]['begin']));
+
+        chart.datasets.all[dataset_index].values.push(new datapoint(json.values[key][i]['end'],
+								    json.values[key][i]['value'],
+								    chart.datasets.all[dataset_index],
+								    json.values[key][i]['end']));
+      }
+      chart.state.visible_datasets++;
+      chart.datasets.all[dataset_index].last_timestamp = json.values[key][i - 1]['end'];
+
+      if (chart.datasets.all[dataset_index].values.length > 0) {
+        chart.datasets.all[dataset_index].mean = d3.mean(chart.datasets.all[dataset_index].values,
+							 get_datapoint_y);
+        chart.datasets.all[dataset_index].median = d3.median(chart.datasets.all[dataset_index].values,
+							     get_datapoint_y);
+      } else {
+        chart.datasets.all[dataset_index].invalid = true;
+        chart.datasets.all[dataset_index].hidden = true;
+
+        chart.datasets.all[dataset_index].mean = "No Samples";
+        chart.datasets.all[dataset_index].median = "No Samples";
+      }
+
+      dataset_index++;
+    }
+  }
+
+  callback();
+}
+
 function parse_json(json, chart, callback) {
   if (
     json !== undefined &&
@@ -1065,6 +1116,17 @@ function load_json(chart, callback) {
       .header("Content-Type", "application/x-www-form-urlencoded")
       .post(post_data, function(error, json) {
         parse_json(json, chart, callback);
+      });
+  }
+}
+
+function load_cdmjson(chart, callback) {
+  if (chart.options.cdmjson_object !== undefined) {
+    parse_cdmjson(chart.options.cdmjson_object, chart, callback);
+  } else {
+    d3.json(chart.options.cdmjson_url)
+      .get(function(error, json) {
+        parse_cdmjson(json, chart, callback);
       });
   }
 }
@@ -3465,7 +3527,13 @@ function load_datasets(chart) {
           queued_datasets++;
 
           chart.datasets_queue.defer(load_json, chart);
-        }
+        } else {
+          if (chart.options.cdmjson_url || chart.options.cdmjson_object) {
+            queued_datasets++;
+
+            chart.datasets_queue.defer(load_cdmjson, chart);
+          }
+	}
       }
     }
   }
