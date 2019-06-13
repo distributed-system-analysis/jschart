@@ -126,9 +126,7 @@ class App extends Component {
       "FIO",
       "Time",
       "FIO",
-      {
-        dynamic_chart: true
-      }
+      {}
     );
     jschart.create_jschart(
       1,
@@ -137,9 +135,7 @@ class App extends Component {
       "IOSTAT",
       "Time",
       "IOSTAT",
-      {
-        dynamic_chart: true
-      }
+      {}
     );
     jschart.finish_page();
   };

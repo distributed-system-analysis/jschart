@@ -174,6 +174,7 @@ function chart(
       table: null,
       title: null,
       stacked: {
+        toggle: null,
         median: null, median_row: null,
         mean: null, mean_row: null,
         value: null, value_row: null
@@ -300,6 +301,14 @@ function setup_chart_options(chart, options) {
   };
 
   // option(s) "parsing"
+  if (options.stacked !== undefined) {
+    if (options.stacked) {
+      chart.stacked = true;
+    } else {
+      chart.stacked = false;
+    }
+  }
+
   if (chart.data_model == "timeseries") {
     the_options.x.scale.time = true;
     the_options.x.scale.linear = false;
@@ -2020,6 +2029,21 @@ function create_table(chart) {
     .text("Hide Datasets")
     .on("click", apply_name_filter_hide);
 
+  var row = chart.dom.table.table.append("tr").classed("header", true);
+
+  var cell = row
+    .append("th")
+    .attr("colSpan", colspan)
+    .text("Stacked Datasets: ");
+
+  chart.dom.table.stacked.toggle = cell
+    .selectAll(".toggle_stacked_mode")
+    .data([chart])
+    .enter()
+    .append("button")
+    .text(function() { if (chart.stacked) { return "Disable"; } else { return "Enable"; } })
+    .on("click", toggle_stacked);
+
   if (chart.options.live_update) {
     console.log(
       'Creating table controls for chart "' + chart.chart_title + '"...'
@@ -2871,23 +2895,21 @@ function build_chart(chart) {
 
   chart.y.brush = d3.svg.brush().y(chart.y.scale.zoom);
 
-  if (chart.stacked) {
-    chart.functions.area = d3.svg
-      .area()
-      .x(get_chart_scaled_x)
-      .y0(get_chart_scaled_y0)
-      .y1(get_chart_scaled_y_y0);
+  chart.functions.area = d3.svg
+    .area()
+    .x(get_chart_scaled_x)
+    .y0(get_chart_scaled_y0)
+    .y1(get_chart_scaled_y_y0);
 
-    chart.functions.stack = d3.layout
-      .stack()
-      .y(get_stack_layout_y)
-      .values(get_dataset_values);
-  } else {
-    chart.functions.line = d3.svg
-      .line()
-      .x(get_chart_scaled_x)
-      .y(get_chart_scaled_y);
-  }
+  chart.functions.stack = d3.layout
+    .stack()
+    .y(get_stack_layout_y)
+    .values(get_dataset_values);
+
+  chart.functions.line = d3.svg
+    .line()
+    .x(get_chart_scaled_x)
+    .y(get_chart_scaled_y);
 
   chart.chart.svg = chart_cell
     .selectAll(".svg")
@@ -5312,24 +5334,22 @@ function reset_chart(chart) {
     chart.dom.table.data_rows = null;
   }
 
-  if (chart.stacked) {
-    if (chart.dom.table.stacked.median_row) {
-      chart.dom.table.stacked.median_row.remove();
-      chart.dom.table.stacked.median_row = null;
-      chart.dom.table.stacked.median = null;
-    }
+  if (chart.dom.table.stacked.median_row) {
+    chart.dom.table.stacked.median_row.remove();
+    chart.dom.table.stacked.median_row = null;
+    chart.dom.table.stacked.median = null;
+  }
 
-    if (chart.dom.table.stacked.mean_row) {
-      chart.dom.table.stacked.mean_row.remove();
-      chart.dom.table.stacked.mean_row = null;
-      chart.dom.table.stacked.mean = null;
-    }
+  if (chart.dom.table.stacked.mean_row) {
+    chart.dom.table.stacked.mean_row.remove();
+    chart.dom.table.stacked.mean_row = null;
+    chart.dom.table.stacked.mean = null;
+  }
 
-    if (chart.dom.table.stacked.value_row) {
-      chart.dom.table.stacked.value_row.remove();
-      chart.dom.table.stacked.value_row = null;
-      chart.dom.table.stacked.value = null;
-    }
+  if (chart.dom.table.stacked.value_row) {
+    chart.dom.table.stacked.value_row.remove();
+    chart.dom.table.stacked.value_row = null;
+    chart.dom.table.stacked.value = null;
   }
 
   for (var i = chart.datasets.all.length - 1; i >= 0; i--) {
@@ -5466,4 +5486,17 @@ exports.chart_set_y_axis_label = function(location, label) {
   }
 
   __chart_set_y_axis_label(chart, label);
+}
+
+function toggle_stacked(chart) {
+  console.log("Toggling stacked attribute for chart \"" + chart.title + "\"");
+
+  chart.stacked = !chart.stacked;
+  reload_chart(chart);
+
+  if (chart.stacked) {
+    chart.dom.table.stacked.toggle.text("Disable");
+  } else {
+    chart.dom.table.stacked.toggle.text("Enable");
+  }
 }
