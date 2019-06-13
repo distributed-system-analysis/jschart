@@ -964,7 +964,16 @@ function live_update(chart) {
 }
 
 function parse_cdmjson(json, chart, callback) {
-  if (json !== undefined && json.breakouts !== undefined && json.values !== undefined) {
+  if (json === undefined) {
+    callback();
+    return;
+  }
+
+  if (json.metric_source && json.metric_type) {
+    __chart_set_y_axis_label(chart, json.metric_source + " - " + json.metric_type);
+  }
+
+  if (json.values !== undefined) {
     var dataset_index = 0;
     for (var key in json.values) {
       chart.datasets.all[dataset_index] = new dataset(dataset_index, key, 0, 0, [], chart);
@@ -5425,4 +5434,36 @@ exports.chart_set_title = function(location, title) {
   }
 
   __chart_set_title(chart, title);
+}
+
+function __chart_set_x_axis_label(chart, label) {
+  chart.x.axis.title.text = label;
+  chart.x.axis.title.dom.text(label);
+}
+
+exports.chart_set_x_axis_label = function(location, label) {
+  console.log("Attempting to set x axis label for chart at '" + location + "' to '" + label + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_set_x_axis_label(chart, label);
+}
+
+function __chart_set_y_axis_label(chart, label) {
+  chart.y.axis.title.text = label;
+  chart.y.axis.title.dom.text(label);
+}
+
+exports.chart_set_y_axis_label = function(location, label) {
+  console.log("Attempting to set y axis label for chart at '" + location + "' to '" + label + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_set_y_axis_label(chart, label);
 }

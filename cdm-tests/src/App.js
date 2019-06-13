@@ -46,6 +46,8 @@ for (var i = 0; i < fio_choices.length; i++) {
 
 function change_fio_selection() {
   jschart.chart_set_title("jschart_cdm_fio", fio_choices[this.value].label);
+  jschart.chart_set_y_axis_label("jschart_cdm_fio", "Y Axis");
+  jschart.chart_set_x_axis_label("jschart_cdm_fio", "X Axis");
   jschart.chart_reload_options("jschart_cdm_fio", fio_choices[this.value].object);
 }
 
@@ -94,6 +96,8 @@ for (i = 0; i < iostat_choices.length; i++) {
 
 function change_iostat_selection() {
   jschart.chart_set_title("jschart_cdm_iostat", iostat_choices[this.value].label);
+  jschart.chart_set_y_axis_label("jschart_cdm_iostat", "Y Axis");
+  jschart.chart_set_x_axis_label("jschart_cdm_iostat", "X Axis");
   jschart.chart_reload_options("jschart_cdm_iostat", iostat_choices[this.value].object);
 }
 
@@ -121,7 +125,7 @@ class App extends Component {
       "jschart_cdm_fio",
       "FIO",
       "Time",
-      "IOPs",
+      "FIO",
       {
         dynamic_chart: true
       }
@@ -132,7 +136,7 @@ class App extends Component {
       "jschart_cdm_iostat",
       "IOSTAT",
       "Time",
-      "IOPs",
+      "IOSTAT",
       {
         dynamic_chart: true
       }
