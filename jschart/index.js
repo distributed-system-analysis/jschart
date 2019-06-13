@@ -168,9 +168,11 @@ function chart(
 
   this.dom = {
     div: null,
+    title: null,
     table: {
       location: null,
       table: null,
+      title: null,
       stacked: {
         median: null, median_row: null,
         mean: null, mean_row: null,
@@ -1943,9 +1945,11 @@ function create_table(chart) {
     .append("table")
     .classed("chart", true);
 
-  chart.dom.table.table
+  var row = chart.dom.table.table
     .append("tr")
-    .classed("header", true)
+    .classed("header", true);
+
+  chart.dom.table.title = row
     .append("th")
     .attr("colSpan", colspan)
     .text(chart.chart_title);
@@ -2926,7 +2930,7 @@ function build_chart(chart) {
     )
     .attr("height", 15);
 
-  chart.chart.container
+  chart.dom.title = chart.chart.container
     .append("text")
     .classed("title middletext", true)
     .attr("x", chart.dimensions.viewport_width / 2)
@@ -5367,29 +5371,58 @@ function reload_chart(chart) {
   chart.state.reset = false;
 }
 
-exports.chart_reload = function(location, options) {
-    console.log("Attempting to reload chart at location '" + location + "'.");
-
-    var chart = null;
-    for (var i = 0; i < charts.length; i++) {
-      if (charts[i].location == location) {
-        chart = charts[charts[i].charts_index];
-        break;
-      }
+function div_to_chart(location) {
+  var chart = null;
+  for (var i = 0; i < charts.length; i++) {
+    if (charts[i].location == location) {
+      chart = charts[charts[i].charts_index];
+      break;
     }
+  }
 
-    if (!chart) {
-      console.error("Could not locate chart at location '" + location + "'.");
-      return;
-    }
+  if (!chart) {
+    console.error("Could not locate chart at location '" + location + "'.");
+  }
 
-    console.log("Reloading chart '" + chart.chart_title + "' at location '" + chart.location + "'.");
+  return(chart);
+}
 
-    reset_chart(chart);
+function __chart_reload_options(chart, options) {
+  console.log("Reloading chart '" + chart.chart_title + "' options at location '" + chart.location + "'.");
 
-    chart.options = setup_chart_options(chart, options);
+  reset_chart(chart);
 
-    load_datasets(chart);
+  chart.options = setup_chart_options(chart, options);
 
-    chart.state.reset = false;
+  load_datasets(chart);
+
+  chart.state.reset = false;
+}
+
+exports.chart_reload_options = function(location, options) {
+  console.log("Attempting to reload chart options at location '" + location + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_reload_options(chart, options);
+}
+
+function __chart_set_title(chart, title) {
+  chart.chart_title = title;
+  chart.dom.title.text(title);
+  chart.dom.table.title.text(title);
+}
+
+exports.chart_set_title = function(location, title) {
+  console.log("Attempting to set chart title at location '" + location + "' to '" + title + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_set_title(chart, title);
 }

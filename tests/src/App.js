@@ -28,7 +28,7 @@ for (var i = 0; i < choices.length; i++) {
 }
 
 function change_selection() {
-  jschart.chart_reload("jschart_dynamic", choices[this.value].object);
+  jschart.chart_reload_options("jschart_dynamic", choices[this.value].object);
 }
 
 function setup_dynamic_chart_selection_box() {

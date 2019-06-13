@@ -45,7 +45,8 @@ for (var i = 0; i < fio_choices.length; i++) {
 }
 
 function change_fio_selection() {
-  jschart.chart_reload("jschart_cdm_fio", fio_choices[this.value].object);
+  jschart.chart_set_title("jschart_cdm_fio", fio_choices[this.value].label);
+  jschart.chart_reload_options("jschart_cdm_fio", fio_choices[this.value].object);
 }
 
 function setup_fio_chart_selection_box() {
@@ -87,12 +88,13 @@ var iostat_choices = [
     "object": { cdmjson_object: iostat_cdm_5 }
   }
 ];
-for (var i = 0; i < iostat_choices.length; i++) {
+for (i = 0; i < iostat_choices.length; i++) {
   iostat_choices[i].index = i;
 }
 
 function change_iostat_selection() {
-  jschart.chart_reload("jschart_cdm_iostat", iostat_choices[this.value].object);
+  jschart.chart_set_title("jschart_cdm_iostat", iostat_choices[this.value].label);
+  jschart.chart_reload_options("jschart_cdm_iostat", iostat_choices[this.value].object);
 }
 
 function setup_iostat_chart_selection_box() {
@@ -117,7 +119,7 @@ class App extends Component {
       1,
       "timeseries",
       "jschart_cdm_fio",
-      "FIO Chart Demo",
+      "FIO",
       "Time",
       "IOPs",
       {
@@ -128,7 +130,7 @@ class App extends Component {
       1,
       "timeseries",
       "jschart_cdm_iostat",
-      "IOSTAT Chart Demo",
+      "IOSTAT",
       "Time",
       "IOPs",
       {
