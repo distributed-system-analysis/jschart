@@ -9,10 +9,12 @@ import fio_cdm_4 from './data/fio-iops-host-perf36-action-job.json';
 import fio_cdm_5 from './data/fio-iops-host-perf84-action-job.json';
 
 import iostat_cdm_1 from './data/iostat-iops.json';
-import iostat_cdm_2 from './data/iostat-iops-host-per36-dev-sda.json';
-import iostat_cdm_3 from './data/iostat-iops-host-per84-dev-nvme0n1.json';
-import iostat_cdm_4 from './data/iostat-iops-host-perf36-dev-sda-type.json';
-import iostat_cdm_5 from './data/iostat-iops-host-perf84-dev-nvme0n1-type.json';
+import iostat_cdm_2 from './data/iostat-iops-host.json';
+import iostat_cdm_3 from './data/iostat-iops-host-per36-dev-sda.json';
+import iostat_cdm_4 from './data/iostat-iops-host-per84-dev-nvme0n1.json';
+import iostat_cdm_5 from './data/iostat-iops-host-perf36-dev-sda-type.json';
+import iostat_cdm_6 from './data/iostat-iops-host-perf84-dev-nvme0n1-type.json';
+import iostat_cdm_7 from './data/iostat-iops-host-dev-type.json';
 
 var fio_choices = [
   {
@@ -70,24 +72,32 @@ var iostat_choices = [
     "object": { }
   },
   {
-    "label": "IOPs - Per Host",
+    "label": "IOPs",
     "object": { cdmjson_object: iostat_cdm_1 }
   },
   {
-    "label": "IOPs - host=perf36,dev=sda",
+    "label": "IOPs - Per Host",
     "object": { cdmjson_object: iostat_cdm_2 }
   },
   {
-    "label": "IOPs - host=perf84,dev=nvme0n1",
+    "label": "IOPs - host=perf36,dev=sda",
     "object": { cdmjson_object: iostat_cdm_3 }
   },
   {
-    "label": "IOPs - host=perf36,dev=sda, per type",
+    "label": "IOPs - host=perf84,dev=nvme0n1",
     "object": { cdmjson_object: iostat_cdm_4 }
   },
   {
-    "label": "IOPs - host=perf84,dev=nvme0n1, per type",
+    "label": "IOPs - host=perf36,dev=sda, per type",
     "object": { cdmjson_object: iostat_cdm_5 }
+  },
+  {
+    "label": "IOPs - host=perf84,dev=nvme0n1, per type",
+    "object": { cdmjson_object: iostat_cdm_6 }
+  },
+  {
+    "label": "IOPs - Per Host, Per Dev, Per Type",
+    "object": { cdmjson_object: iostat_cdm_7 }
   }
 ];
 for (i = 0; i < iostat_choices.length; i++) {
