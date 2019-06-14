@@ -8,6 +8,7 @@ import fio_cdm_3 from './data/fio-iops-host-per36-action.json';
 import fio_cdm_4 from './data/fio-iops-host-per84-action.json';
 import fio_cdm_5 from './data/fio-iops-host-perf36-action-job.json';
 import fio_cdm_6 from './data/fio-iops-host-perf84-action-job.json';
+import fio_cdm_7 from './data/fio-iops-host-action-job.json';
 
 import iostat_cdm_1 from './data/iostat-iops.json';
 import iostat_cdm_2 from './data/iostat-iops-host.json';
@@ -45,6 +46,10 @@ var fio_choices = [
   {
     "label": "IOPs - host=perf84, per action, per job",
     "object": { cdmjson_object: fio_cdm_6 }
+  },
+  {
+    "label": "IOPs - per host, per action, per job",
+    "object": { cdmjson_object: fio_cdm_7 }
   }
 ];
 for (var i = 0; i < fio_choices.length; i++) {
