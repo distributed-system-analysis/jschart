@@ -168,10 +168,17 @@ function chart(
 
   this.dom = {
     div: null,
+    title: null,
     table: {
       location: null,
       table: null,
-      stacked: { median: null, mean: null, value: null },
+      title: null,
+      stacked: {
+        toggle: null,
+        median: null, median_row: null,
+        mean: null, mean_row: null,
+        value: null, value_row: null
+      },
       live_update: { history: null, interval: null },
       threshold: null,
       name_filter: null,
@@ -272,6 +279,8 @@ function setup_chart_options(chart, options) {
     plotfiles: null,
     csvfiles: null,
     plotfile: null,
+    cdmjson_url: null,
+    cdmjson_object: null,
     json_plotfile: null,
     json_object: null,
     json_args: null,
@@ -292,6 +301,14 @@ function setup_chart_options(chart, options) {
   };
 
   // option(s) "parsing"
+  if (options.stacked !== undefined) {
+    if (options.stacked) {
+      chart.stacked = true;
+    } else {
+      chart.stacked = false;
+    }
+  }
+
   if (chart.data_model == "timeseries") {
     the_options.x.scale.time = true;
     the_options.x.scale.linear = false;
@@ -351,6 +368,14 @@ function setup_chart_options(chart, options) {
 
   if (options.json_args !== undefined) {
     the_options.json_args = options.json_args;
+  }
+
+  if (options.cdmjson_object !== undefined) {
+    the_options.cdmjson_object = options.cdmjson_object;
+  }
+
+  if (options.cdmjson_url !== undefined) {
+    the_options.cdmjson_url = options.cdmjson_url;
   }
 
   if (options.raw_data_sources !== undefined) {
@@ -947,6 +972,56 @@ function live_update(chart) {
     });
 }
 
+function parse_cdmjson(json, chart, callback) {
+  if (json === undefined) {
+    callback();
+    return;
+  }
+
+  if (json.metric_source && json.metric_type) {
+    __chart_set_y_axis_label(chart, json.metric_source + " - " + json.metric_type);
+  }
+
+  if (json.values !== undefined) {
+    var dataset_index = 0;
+    for (var key in json.values) {
+      chart.datasets.all[dataset_index] = new dataset(dataset_index, key, 0, 0, [], chart);
+
+      var i = 0;
+      for (i = 0; i < json.values[key].length; i++) {
+        chart.datasets.all[dataset_index].values.push(new datapoint(json.values[key][i]['begin'],
+								    json.values[key][i]['value'],
+								    chart.datasets.all[dataset_index],
+								    json.values[key][i]['begin']));
+
+        chart.datasets.all[dataset_index].values.push(new datapoint(json.values[key][i]['end'],
+								    json.values[key][i]['value'],
+								    chart.datasets.all[dataset_index],
+								    json.values[key][i]['end']));
+      }
+      chart.state.visible_datasets++;
+      chart.datasets.all[dataset_index].last_timestamp = json.values[key][i - 1]['end'];
+
+      if (chart.datasets.all[dataset_index].values.length > 0) {
+        chart.datasets.all[dataset_index].mean = d3.mean(chart.datasets.all[dataset_index].values,
+							 get_datapoint_y);
+        chart.datasets.all[dataset_index].median = d3.median(chart.datasets.all[dataset_index].values,
+							     get_datapoint_y);
+      } else {
+        chart.datasets.all[dataset_index].invalid = true;
+        chart.datasets.all[dataset_index].hidden = true;
+
+        chart.datasets.all[dataset_index].mean = "No Samples";
+        chart.datasets.all[dataset_index].median = "No Samples";
+      }
+
+      dataset_index++;
+    }
+  }
+
+  callback();
+}
+
 function parse_json(json, chart, callback) {
   if (
     json !== undefined &&
@@ -1047,20 +1122,31 @@ function parse_json(json, chart, callback) {
 }
 
 function load_json(chart, callback) {
-  var post_data = "";
-
-  if (chart.options.json_args) {
-    post_data += chart.options.json_args;
-  }
-
   if (chart.options.json_object !== undefined) {
     var json = chart.options.json_object;
     parse_json(json, chart, callback);
   } else {
+    var post_data = "";
+
+    if (chart.options.json_args) {
+      post_data += chart.options.json_args;
+    }
+
     d3.json(chart.options.json_plotfile)
       .header("Content-Type", "application/x-www-form-urlencoded")
       .post(post_data, function(error, json) {
         parse_json(json, chart, callback);
+      });
+  }
+}
+
+function load_cdmjson(chart, callback) {
+  if (chart.options.cdmjson_object !== undefined) {
+    parse_cdmjson(chart.options.cdmjson_object, chart, callback);
+  } else {
+    d3.json(chart.options.cdmjson_url)
+      .get(function(error, json) {
+        parse_cdmjson(json, chart, callback);
       });
   }
 }
@@ -1877,9 +1963,11 @@ function create_table(chart) {
     .append("table")
     .classed("chart", true);
 
-  chart.dom.table.table
+  var row = chart.dom.table.table
     .append("tr")
-    .classed("header", true)
+    .classed("header", true);
+
+  chart.dom.table.title = row
     .append("th")
     .attr("colSpan", colspan)
     .text(chart.chart_title);
@@ -1940,6 +2028,21 @@ function create_table(chart) {
     .append("button")
     .text("Hide Datasets")
     .on("click", apply_name_filter_hide);
+
+  var row = chart.dom.table.table.append("tr").classed("header", true);
+
+  var cell = row
+    .append("th")
+    .attr("colSpan", colspan)
+    .text("Stacked Datasets: ");
+
+  chart.dom.table.stacked.toggle = cell
+    .selectAll(".toggle_stacked_mode")
+    .data([chart])
+    .enter()
+    .append("button")
+    .text(function() { if (chart.stacked) { return "Disable"; } else { return "Enable"; } })
+    .on("click", toggle_stacked);
 
   if (chart.options.live_update) {
     console.log(
@@ -2410,60 +2513,60 @@ function table_add_datasets(chart) {
   chart.dom.table.data_rows = chart.dom.table.table.selectAll("#datarow");
 
   if (chart.stacked) {
-    var row = chart.dom.table.table.append("tr").classed("footer", true);
+    chart.dom.table.stacked.value_row = chart.dom.table.table.append("tr").classed("footer", true);
 
-    row
+    chart.dom.table.stacked.value_row
       .append("th")
       .attr("align", "left")
       .text("Combined Value");
 
-    chart.dom.table.stacked.value = row.append("td").attr("align", "right");
+    chart.dom.table.stacked.value = chart.dom.table.stacked.value_row.append("td").attr("align", "right");
 
-    row.append("td");
+    chart.dom.table.stacked.value_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.value_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.value_row.append("td");
 
-    var row = chart.dom.table.table.append("tr").classed("footer", true);
+    chart.dom.table.stacked.mean_row = chart.dom.table.table.append("tr").classed("footer", true);
 
-    row
+    chart.dom.table.stacked.mean_row
       .append("th")
       .attr("align", "left")
       .text("Combined Average");
 
-    row.append("td");
+    chart.dom.table.stacked.mean_row.append("td");
 
     compute_stacked_mean(chart);
 
-    chart.dom.table.stacked.mean = row
+    chart.dom.table.stacked.mean = chart.dom.table.stacked.mean_row
       .append("td")
       .attr("align", "right")
       .text(table_print(chart, chart.table.stacked_mean));
 
-    row.append("td");
+    chart.dom.table.stacked.mean_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.mean_row.append("td");
 
-    var row = chart.dom.table.table.append("tr").classed("footer", true);
+    chart.dom.table.stacked.median_row = chart.dom.table.table.append("tr").classed("footer", true);
 
-    row
+    chart.dom.table.stacked.median_row
       .append("th")
       .attr("align", "left")
       .text("Combined Median");
 
-    row.append("td");
+    chart.dom.table.stacked.median_row.append("td");
 
-    row.append("td");
+    chart.dom.table.stacked.median_row.append("td");
 
     compute_stacked_median(chart);
 
-    chart.dom.table.stacked.median = row
+    chart.dom.table.stacked.median = chart.dom.table.stacked.median_row
       .append("td")
       .attr("align", "right")
       .text(table_print(chart, chart.table.stacked_median));
 
-    row.append("td");
+    chart.dom.table.stacked.median_row.append("td");
   }
 
   if (chart.options.raw_data_sources.length > 0) {
@@ -2792,23 +2895,21 @@ function build_chart(chart) {
 
   chart.y.brush = d3.svg.brush().y(chart.y.scale.zoom);
 
-  if (chart.stacked) {
-    chart.functions.area = d3.svg
-      .area()
-      .x(get_chart_scaled_x)
-      .y0(get_chart_scaled_y0)
-      .y1(get_chart_scaled_y_y0);
+  chart.functions.area = d3.svg
+    .area()
+    .x(get_chart_scaled_x)
+    .y0(get_chart_scaled_y0)
+    .y1(get_chart_scaled_y_y0);
 
-    chart.functions.stack = d3.layout
-      .stack()
-      .y(get_stack_layout_y)
-      .values(get_dataset_values);
-  } else {
-    chart.functions.line = d3.svg
-      .line()
-      .x(get_chart_scaled_x)
-      .y(get_chart_scaled_y);
-  }
+  chart.functions.stack = d3.layout
+    .stack()
+    .y(get_stack_layout_y)
+    .values(get_dataset_values);
+
+  chart.functions.line = d3.svg
+    .line()
+    .x(get_chart_scaled_x)
+    .y(get_chart_scaled_y);
 
   chart.chart.svg = chart_cell
     .selectAll(".svg")
@@ -2860,7 +2961,7 @@ function build_chart(chart) {
     )
     .attr("height", 15);
 
-  chart.chart.container
+  chart.dom.title = chart.chart.container
     .append("text")
     .classed("title middletext", true)
     .attr("x", chart.dimensions.viewport_width / 2)
@@ -3461,7 +3562,13 @@ function load_datasets(chart) {
           queued_datasets++;
 
           chart.datasets_queue.defer(load_json, chart);
-        }
+        } else {
+          if (chart.options.cdmjson_url || chart.options.cdmjson_object) {
+            queued_datasets++;
+
+            chart.datasets_queue.defer(load_cdmjson, chart);
+          }
+	}
       }
     }
   }
@@ -4222,7 +4329,9 @@ function set_dataset_value(chart, dataset_index, values_index) {
 }
 
 function set_stacked_value(chart, value) {
-  chart.dom.table.stacked.value.text(value);
+  if (chart.dom.table.stacked.value) {
+    chart.dom.table.stacked.value.text(value);
+  }
 }
 
 function show_dataset_values(chart, x_coordinate) {
@@ -5225,6 +5334,24 @@ function reset_chart(chart) {
     chart.dom.table.data_rows = null;
   }
 
+  if (chart.dom.table.stacked.median_row) {
+    chart.dom.table.stacked.median_row.remove();
+    chart.dom.table.stacked.median_row = null;
+    chart.dom.table.stacked.median = null;
+  }
+
+  if (chart.dom.table.stacked.mean_row) {
+    chart.dom.table.stacked.mean_row.remove();
+    chart.dom.table.stacked.mean_row = null;
+    chart.dom.table.stacked.mean = null;
+  }
+
+  if (chart.dom.table.stacked.value_row) {
+    chart.dom.table.stacked.value_row.remove();
+    chart.dom.table.stacked.value_row = null;
+    chart.dom.table.stacked.value = null;
+  }
+
   for (var i = chart.datasets.all.length - 1; i >= 0; i--) {
     if (chart.options.scatterplot) {
       chart.datasets.all[i].dom.markers.remove();
@@ -5273,29 +5400,103 @@ function reload_chart(chart) {
   chart.state.reset = false;
 }
 
-exports.chart_reload = function(location, options) {
-    console.log("Attempting to reload chart at location '" + location + "'.");
-
-    var chart = null;
-    for (var i = 0; i < charts.length; i++) {
-      if (charts[i].location == location) {
-        chart = charts[charts[i].charts_index];
-        break;
-      }
+function div_to_chart(location) {
+  var chart = null;
+  for (var i = 0; i < charts.length; i++) {
+    if (charts[i].location == location) {
+      chart = charts[charts[i].charts_index];
+      break;
     }
+  }
 
-    if (!chart) {
-      console.error("Could not locate chart at location '" + location + "'.");
-      return;
-    }
+  if (!chart) {
+    console.error("Could not locate chart at location '" + location + "'.");
+  }
 
-    console.log("Reloading chart '" + chart.chart_title + "' at location '" + chart.location + "'.");
+  return(chart);
+}
 
-    reset_chart(chart);
+function __chart_reload_options(chart, options) {
+  console.log("Reloading chart '" + chart.chart_title + "' options at location '" + chart.location + "'.");
 
-    chart.options = setup_chart_options(chart, options);
+  reset_chart(chart);
 
-    load_datasets(chart);
+  chart.options = setup_chart_options(chart, options);
 
-    chart.state.reset = false;
+  load_datasets(chart);
+
+  chart.state.reset = false;
+}
+
+exports.chart_reload_options = function(location, options) {
+  console.log("Attempting to reload chart options at location '" + location + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_reload_options(chart, options);
+}
+
+function __chart_set_title(chart, title) {
+  chart.chart_title = title;
+  chart.dom.title.text(title);
+  chart.dom.table.title.text(title);
+}
+
+exports.chart_set_title = function(location, title) {
+  console.log("Attempting to set chart title at location '" + location + "' to '" + title + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_set_title(chart, title);
+}
+
+function __chart_set_x_axis_label(chart, label) {
+  chart.x.axis.title.text = label;
+  chart.x.axis.title.dom.text(label);
+}
+
+exports.chart_set_x_axis_label = function(location, label) {
+  console.log("Attempting to set x axis label for chart at '" + location + "' to '" + label + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_set_x_axis_label(chart, label);
+}
+
+function __chart_set_y_axis_label(chart, label) {
+  chart.y.axis.title.text = label;
+  chart.y.axis.title.dom.text(label);
+}
+
+exports.chart_set_y_axis_label = function(location, label) {
+  console.log("Attempting to set y axis label for chart at '" + location + "' to '" + label + "'.");
+
+  var chart = div_to_chart(location);
+  if (!chart) {
+    return;
+  }
+
+  __chart_set_y_axis_label(chart, label);
+}
+
+function toggle_stacked(chart) {
+  console.log("Toggling stacked attribute for chart \"" + chart.title + "\"");
+
+  chart.stacked = !chart.stacked;
+  reload_chart(chart);
+
+  if (chart.stacked) {
+    chart.dom.table.stacked.toggle.text("Disable");
+  } else {
+    chart.dom.table.stacked.toggle.text("Enable");
+  }
 }

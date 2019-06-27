@@ -1,6 +1,6 @@
 {
   "name": "jschart",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "This is a Javascript library that renders SVG charts.",
   "keywords": [
     "chart", 
