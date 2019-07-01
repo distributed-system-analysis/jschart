@@ -3701,6 +3701,11 @@ exports.create_jschart = function(
     stacked = 0;
   }
 
+  d3.select('#'+location)
+    .style("display","flex")
+    .style( "justify-content","center")
+    .style("align-items","center")
+
   // add an entry to the chart generating queue
   charts_queue.defer(
     generate_chart,
