@@ -15,7 +15,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "jest",
+    "test": "jest --config=testconfig.json ",
     "debug": "NODE_ENV=debug npm test",
     "eject": "react-scripts eject"
   },
