@@ -2813,8 +2813,13 @@ function build_chart(chart) {
     );
     return;
   }
-
-  var table = chart.dom.div.append("table");
+  
+  var table = chart.dom.div.append("table")
+    .attr("class", "graphtable")
+    .style("max-width", chart.dimensions.viewport_width+"px")
+    .style("flex", "0.9 0.9 auto")
+    .style("width", 0)
+    .style("word-break", "break-all");
 
   var row = table.append("tr")
 	.classed("wrapper", true)
@@ -2917,13 +2922,8 @@ function build_chart(chart) {
     .enter()
     .append("svg")
     .classed("svg", true)
-    .attr(
-      "width",
-      chart.dimensions.viewport_width +
-        chart.dimensions.margin.left +
-        chart.dimensions.margin.right
-    )
-    .attr("height", get_svg_height(chart));
+    .attr("viewBox", "0 0" + " " + (chart.dimensions.viewport_width + chart.dimensions.margin.left +
+      chart.dimensions.margin.right) + " " + (get_svg_height(chart) + 20) + "");
 
   chart.chart.defs = chart.chart.svg.append("defs");
   if (!chart.options.scatterplot) {
@@ -3703,9 +3703,11 @@ exports.create_jschart = function(
 
   d3.select('#'+location)
     .style("display","flex")
-    .style( "justify-content","center")
-    .style("align-items","center")
 
+  d3.selectAll(".svg")
+    .style("width",'100%')
+    .style("height","auto")
+   
   // add an entry to the chart generating queue
   charts_queue.defer(
     generate_chart,
@@ -5390,7 +5392,7 @@ function get_svg_height(chart) {
          chart.dimensions.margin.bottom +
          ( Math.ceil(chart.datasets.all.length / chart.state.legend_columns) -
            1 + chart.options.legend_entries.length
-	 ) * chart.dimensions.legend_properties.row_height;
+        ) * chart.dimensions.legend_properties.row_height;
 }
 
 function reload_chart(chart) {
