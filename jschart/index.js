@@ -2923,7 +2923,7 @@ function build_chart(chart) {
     .append("svg")
     .classed("svg", true)
     .attr("viewBox", "0 0" + " " + (chart.dimensions.viewport_width + chart.dimensions.margin.left +
-      chart.dimensions.margin.right) + " " + (get_svg_height(chart) + 20) + "");
+      chart.dimensions.margin.right) + " " + (get_svg_height(chart) ) + "");
 
   chart.chart.defs = chart.chart.svg.append("defs");
   if (!chart.options.scatterplot) {
@@ -3647,7 +3647,9 @@ function load_datasets(chart) {
 
     if (chart.datasets.all.length > chart.dataset_count) {
       console.log('Resizing SVG for chart "' + chart.chart_title + '".');
-      chart.chart.svg.attr("height", get_svg_height(chart));
+      chart.chart.svg.attr("height", get_svg_height(chart))
+        .attr("viewBox", "0 0" + " " + (chart.dimensions.viewport_width + chart.dimensions.margin.left +
+          chart.dimensions.margin.right) + " " + (get_svg_height(chart)) + "");
       console.log('...finished resizing SVG for chart "' + chart.chart_title + '".');
     }
 
@@ -3704,10 +3706,6 @@ exports.create_jschart = function(
   d3.select('#'+location)
     .style("display","flex")
 
-  d3.selectAll(".svg")
-    .style("width",'100%')
-    .style("height","auto")
-   
   // add an entry to the chart generating queue
   charts_queue.defer(
     generate_chart,
@@ -3724,6 +3722,9 @@ exports.create_jschart = function(
 exports.finish_page = function () {
   // wait for initial chart generation to complete before logging that it is done and changing the page background
   // note: chart datasets may still be loading asynchronously
+  d3.selectAll(".svg")
+    .style("width",'100%')
+    .style("height","auto")
   charts_queue.await(function(error, results) {
     d3.select("body").classed("completedpage", true);
     console.log("Finished creating all charts");
@@ -5381,7 +5382,9 @@ function reset_chart(chart) {
 
   reset_axes_domains(chart);
 
-  chart.chart.svg.attr("height", get_svg_height(chart));
+  chart.chart.svg.attr("height", get_svg_height(chart))
+    .attr("viewBox", "0 0" + " " + (chart.dimensions.viewport_width + chart.dimensions.margin.left +
+      chart.dimensions.margin.right) + " " + (get_svg_height(chart)) + "");
 
   chart.state.reset = true;
 }
