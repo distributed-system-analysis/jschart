@@ -238,20 +238,26 @@ class App extends Component {
           <h1 className="App-title">JSChart CDM Demo</h1>
         </header>
         <br></br>
-        <div id="jschart_cdm_fio">
+        <div>
           <h3 id="select_fio_dataset">
-	    FIO Chart Dataset Selection:
-	  </h3>
+            FIO Chart Dataset Selection:
+	        </h3>
+          <div id="jschart_cdm_fio">
+          </div>
         </div>
-        <div id="jschart_cdm_iostat">
+        <div>
           <h3 id="select_iostat_dataset">
-	    IOSTAT Chart Dataset Selection:
-	  </h3>
+            IOSTAT Chart Dataset Selection:
+	        </h3>
+          <div id="jschart_cdm_iostat">
+          </div>
         </div>
-        <div id="jschart_cdm_mpstat">
+        <div>
           <h3 id="select_mpstat_dataset">
-	    MPSTAT Chart Dataset Selection:
-	  </h3>
+            MPSTAT Chart Dataset Selection:
+	        </h3>
+          <div id="jschart_cdm_mpstat">
+          </div>
         </div>
       </div>
     );

@@ -141,11 +141,13 @@ class App extends Component {
           <h1 className="App-title">JSChart Demos</h1>
         </header>
         <br></br>
-        <div id="jschart_dynamic">
+        <div>
           <h3 id="select_dataset">
-	    Dynamic Chart Dataset Selection:
-	  </h3>
-	</div>
+	        Dynamic Chart Dataset Selection:
+          </h3>
+          <div id="jschart_dynamic">
+	        </div>
+        </div> 
         <br/>
         <div id="jschart_json"></div>
         <br/>
