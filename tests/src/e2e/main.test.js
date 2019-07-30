@@ -30,9 +30,9 @@ describe('on page load', () => {
   }, 16000)
 
   test('dataset selection', async () => {
-    await page.waitForSelector('div #jschart_dynamic > h3 > select');
+    await page.waitForSelector('div > h3 > select');
     const availDataset = ['Null', 'Dataset 1', 'Dataset 2']
-    let datasetNo = await page.$eval('div #jschart_dynamic > h3 > select', node => node.innerText);
+    let datasetNo = await page.$eval('div > h3 > select', node => node.innerText);
     datasetNo = datasetNo.split('\n')
     expect(datasetNo).toEqual(availDataset);
   });
