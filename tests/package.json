@@ -4,7 +4,7 @@
   "private": true,
   "license": "EPL-1.0",
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": ">=0.21.1",
     "d3": "3.5.17",
     "jschart": "file:../jschart",
     "react": "^16.5.1",
