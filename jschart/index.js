@@ -2973,7 +2973,7 @@ function build_chart(chart) {
     .data([chart])
     .enter()
     .append("text")
-    .classed("actionlabel endtext", true)
+    .classed("actionlabel endtext reset", true)
     .attr(
       "x",
       chart.dimensions.viewport_width + chart.dimensions.margin.right - 10
@@ -2994,7 +2994,7 @@ function build_chart(chart) {
   if (typeof saveSvgAsPng.saveSvgAsPng == "function") {
     chart.chart.container
       .append("text")
-      .classed("actionlabel middletext", true)
+      .classed("actionlabel middletext savePNG", true)
       .attr("x", (chart.dimensions.viewport_width / 4) * 2)
       .attr("y", -chart.dimensions.margin.top + 29)
       .on("click", function() {
@@ -3010,7 +3010,7 @@ function build_chart(chart) {
     .data([chart])
     .enter()
     .append("text")
-    .classed("actionlabel middletext", true)
+    .classed("actionlabel middletext showGraph", true)
     .attr("x", (chart.dimensions.viewport_width / 4) * 3 - 40)
     .attr("y", -chart.dimensions.margin.top + 29)
     .text("Show");
@@ -3027,7 +3027,7 @@ function build_chart(chart) {
     .data([chart])
     .enter()
     .append("text")
-    .classed("actionlabel middletext", true)
+    .classed("actionlabel middletext hideGraph", true)
     .attr("x", (chart.dimensions.viewport_width / 4) * 3 + 11)
     .attr("y", -chart.dimensions.margin.top + 29)
     .text("Hide");
@@ -3109,7 +3109,8 @@ function build_chart(chart) {
 
       create_download(chart.chart_title + ".csv", "text/csv", "utf-8", string);
     })
-    .text("Export Data as CSV");
+    .text("Export Data as CSV")
+    .attr("id","csvdown");
 
   chart.chart.container
     .append("text")
